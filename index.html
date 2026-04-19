@@ -3,26 +3,27 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MEGA QIZ — Speedrun Edition</title>
+  <title>SPEEDRUN QUIZ BATTLE</title>
   <style>
-    /* ── Reset & Base ── */
+    /* ── Reset ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:         #1a1f2e;
-      --bg2:        #232938;
-      --card-bg:    #2a3147;
-      --card-hover: #323c58;
-      --accent:     #fa3e20;
-      --accent2:    #ff6b47;
-      --green:      #00e676;
-      --red:        #ff1744;
-      --gold:       #ffd600;
-      --text:       #e8eaf6;
-      --text-dim:   #8892b0;
-      --radius:     18px;
-      --shadow:     0 8px 32px rgba(0,0,0,0.45);
-      --shadow-hover: 0 16px 48px rgba(250,62,32,0.35);
+      --bg:          #0f1117;
+      --bg2:         #1a1f2e;
+      --bg3:         #232938;
+      --card-bg:     #1e2538;
+      --card-hover:  #283050;
+      --accent:      #fa3e20;
+      --accent2:     #ff6b47;
+      --green:       #00e676;
+      --red:         #ff1744;
+      --gold:        #ffd600;
+      --text:        #e8eaf6;
+      --text-dim:    #7986a8;
+      --radius:      16px;
+      --shadow:      0 4px 24px rgba(0,0,0,0.5);
+      --shadow-h:    0 12px 40px rgba(250,62,32,0.3);
     }
 
     html, body {
@@ -32,124 +33,223 @@
       color: var(--text);
       overflow-x: hidden;
     }
-
-    body {
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+    body { min-height: 100vh; display: flex; flex-direction: column; }
 
     /* ── Progress bar ── */
     #progress-bar {
-      position: fixed;
-      top: 0; left: 0;
+      position: fixed; top: 0; left: 0;
       height: 3px;
       background: linear-gradient(90deg, var(--accent), var(--accent2));
-      width: 0%;
-      transition: width 0.5s ease;
-      z-index: 200;
-      border-radius: 0 2px 2px 0;
+      width: 0%; transition: width 0.5s ease;
+      z-index: 300; border-radius: 0 2px 2px 0;
     }
 
-    /* ── Header ── */
-    header {
-      padding: 18px 32px 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
+    /* ════════════════════════════════
+       SCREEN SYSTEM
+    ════════════════════════════════ */
+    .screen {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
     }
-    .logo {
-      font-size: clamp(20px, 3vw, 28px);
+    .screen.active { display: flex; }
+
+    /* ════════════════════════════════
+       START SCREEN
+    ════════════════════════════════ */
+    #start-screen {
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+      padding: 24px;
+      background: var(--bg);
+    }
+
+    .start-logo {
+      text-align: center;
+      line-height: 1;
+    }
+    .start-logo .title {
+      font-size: clamp(26px, 5vw, 52px);
       font-weight: 900;
-      letter-spacing: 2px;
-      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      letter-spacing: 3px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2), #ffb347);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
-    .logo span {
-      -webkit-text-fill-color: var(--text);
+    .start-logo .subtitle {
+      font-size: clamp(11px, 1.5vw, 14px);
+      color: var(--text-dim);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-top: 6px;
     }
 
-    /* ── Score panel ── */
-    .score-panel {
+    .modes-grid {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+      max-width: 860px;
+    }
+
+    .mode-card {
+      flex: 1;
+      min-width: 220px;
+      max-width: 260px;
+      background: var(--bg2);
+      border: 2px solid transparent;
+      border-radius: var(--radius);
+      padding: 28px 20px 24px;
+      cursor: pointer;
+      text-align: center;
+      transition: transform 0.2s cubic-bezier(.34,1.56,.64,1),
+                  box-shadow 0.2s, border-color 0.2s, background 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .mode-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--glow, transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .mode-card:hover { transform: translateY(-6px); }
+    .mode-card:hover::before { opacity: 1; }
+
+    .mode-card.endless  { --glow: linear-gradient(135deg,rgba(250,62,32,.12),transparent); }
+    .mode-card.normal   { --glow: linear-gradient(135deg,rgba(0,230,118,.12),transparent); }
+    .mode-card.hardcore { --glow: linear-gradient(135deg,rgba(255,23,68,.12),transparent); }
+
+    .mode-card:hover.endless  { border-color: var(--accent); box-shadow: 0 8px 32px rgba(250,62,32,.3); }
+    .mode-card:hover.normal   { border-color: var(--green);  box-shadow: 0 8px 32px rgba(0,230,118,.3); }
+    .mode-card:hover.hardcore { border-color: var(--red);    box-shadow: 0 8px 32px rgba(255,23,68,.3); }
+
+    .mode-icon { font-size: 48px; margin-bottom: 14px; display: block; line-height: 1; }
+    .mode-name {
+      font-size: clamp(15px, 2vw, 18px);
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .mode-card.endless  .mode-name { color: var(--accent2); }
+    .mode-card.normal   .mode-name { color: var(--green); }
+    .mode-card.hardcore .mode-name { color: var(--red); }
+
+    .mode-desc {
+      font-size: clamp(11px, 1.3vw, 13px);
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    /* ════════════════════════════════
+       GAME SCREEN
+    ════════════════════════════════ */
+    #game-screen { background: var(--bg); }
+
+    /* Header */
+    .game-header {
       display: flex;
       align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px 0;
+      flex-shrink: 0;
       gap: 12px;
-      background: var(--bg2);
-      padding: 8px 20px;
-      border-radius: 50px;
-      border: 1px solid rgba(255,255,255,0.06);
     }
-    .score-label {
-      font-size: 14px;
-      color: var(--text-dim);
-      font-weight: 600;
-      text-transform: uppercase;
+    .game-logo {
+      font-size: clamp(13px, 2vw, 17px);
+      font-weight: 900;
       letter-spacing: 1px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      white-space: nowrap;
+    }
+
+    /* Lives */
+    #lives-bar {
+      display: flex;
+      gap: 4px;
+      font-size: clamp(18px, 2.5vw, 24px);
+      flex-shrink: 0;
+    }
+    .life { transition: opacity 0.3s, transform 0.3s; }
+    .life.lost { opacity: 0.18; transform: scale(0.8); }
+
+    /* Pool counter */
+    #pool-counter {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-dim);
+      padding: 3px 0;
+      flex-shrink: 0;
+    }
+
+    /* ── Score block (центр) ── */
+    .score-center {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+      padding: 4px 0 0;
+    }
+    .score-lbl {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
     }
     #score {
-      font-size: clamp(22px, 3vw, 30px);
+      font-size: clamp(28px, 4vw, 44px);
       font-weight: 900;
       color: var(--text);
-      min-width: 40px;
-      text-align: center;
+      line-height: 1;
       transition: color 0.3s;
     }
     #score.positive { color: var(--green); }
     #score.negative { color: var(--red); }
 
-    /* ── Pool counter ── */
-    #pool-counter {
-      text-align: center;
-      font-size: 12px;
-      color: var(--text-dim);
-      padding: 6px 0 0;
-      flex-shrink: 0;
-    }
-
-    /* ── Main arena ── */
+    /* ── Arena ── */
     .arena {
       flex: 1;
       display: flex;
-      align-items: center;
+      align-items: stretch;
       justify-content: center;
-      gap: clamp(16px, 3vw, 48px);
-      padding: clamp(12px, 2vw, 24px) clamp(12px, 3vw, 48px);
+      gap: clamp(8px, 2vw, 32px);
+      padding: clamp(8px, 1.5vw, 16px) clamp(10px, 2vw, 32px);
       min-height: 0;
     }
 
-    /* ── VS divider ── */
+    /* VS col */
     .vs-col {
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
+      justify-content: center;
+      gap: 10px;
       flex-shrink: 0;
     }
     .vs-badge {
-      font-size: clamp(28px, 4vw, 48px);
+      font-size: clamp(22px, 3vw, 38px);
       font-weight: 900;
       font-style: italic;
       background: linear-gradient(135deg, var(--accent), var(--accent2));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
-      text-shadow: none;
-      filter: drop-shadow(0 0 12px rgba(250,62,32,0.5));
-    }
-    .vs-hint {
-      font-size: clamp(11px, 1.2vw, 13px);
-      color: var(--text-dim);
-      text-align: center;
-      line-height: 1.5;
+      filter: drop-shadow(0 0 10px rgba(250,62,32,.5));
     }
 
     /* ── Cards ── */
     .card {
       flex: 1;
-      max-width: 420px;
+      max-width: 380px;
       min-width: 0;
       background: var(--card-bg);
       border-radius: var(--radius);
@@ -168,315 +268,398 @@
       position: relative;
     }
     .card:hover:not(.disabled) {
-      transform: translateY(-6px) scale(1.015);
-      box-shadow: var(--shadow-hover);
-      border-color: rgba(250,62,32,0.4);
+      transform: translateY(-5px) scale(1.012);
+      box-shadow: var(--shadow-h);
+      border-color: rgba(250,62,32,.4);
       background: var(--card-hover);
     }
-    .card:active:not(.disabled) {
-      transform: translateY(-2px) scale(1.005);
-    }
-    .card.disabled {
-      pointer-events: none;
-      cursor: default;
-    }
+    .card:active:not(.disabled) { transform: translateY(-2px) scale(1.004); }
+    .card.disabled { pointer-events: none; cursor: default; }
+
     .card.correct {
-      background: #1b4d2e !important;
+      background: #122b1a !important;
       border-color: var(--green) !important;
-      box-shadow: 0 8px 32px rgba(0,230,118,0.3) !important;
+      box-shadow: 0 8px 32px rgba(0,230,118,.25) !important;
     }
     .card.wrong {
-      background: #4d1b1b !important;
+      background: #2b1212 !important;
       border-color: var(--red) !important;
-      box-shadow: 0 8px 32px rgba(255,23,68,0.3) !important;
+      box-shadow: 0 8px 32px rgba(255,23,68,.25) !important;
     }
     .card.draw {
-      background: #4d3c00 !important;
+      background: #2b2300 !important;
       border-color: var(--gold) !important;
-      box-shadow: 0 8px 32px rgba(255,214,0,0.3) !important;
+      box-shadow: 0 8px 32px rgba(255,214,0,.25) !important;
     }
 
-    /* Ripple эффект при клике */
-    .card .ripple {
+    /* Ripple */
+    .ripple {
       position: absolute;
       border-radius: 50%;
-      background: rgba(255,255,255,0.15);
+      background: rgba(255,255,255,.13);
       transform: scale(0);
-      animation: ripple 0.55s ease-out forwards;
+      animation: ripple .5s ease-out forwards;
       pointer-events: none;
     }
-    @keyframes ripple {
-      to { transform: scale(4); opacity: 0; }
-    }
+    @keyframes ripple { to { transform: scale(4); opacity: 0; } }
 
-    /* Fade-in анимация карточки */
+    /* Card появление */
     .card.fade-in {
-      animation: cardIn 0.4s cubic-bezier(.34,1.56,.64,1);
+      animation: cardIn .38s cubic-bezier(.34,1.56,.64,1);
     }
     @keyframes cardIn {
-      from { opacity: 0; transform: translateY(20px) scale(0.95); }
-      to   { opacity: 1; transform: translateY(0)   scale(1); }
+      from { opacity: 0; transform: translateY(18px) scale(.95); }
+      to   { opacity: 1; transform: translateY(0)    scale(1); }
     }
 
-    /* ── Card внутренности ── */
+    /* Card inner */
     .card-inner {
-      padding: clamp(14px, 2vw, 22px);
+      padding: clamp(10px, 1.5vw, 18px);
       display: flex;
       flex-direction: column;
       height: 100%;
-      gap: 10px;
+      gap: 8px;
     }
-
     .card-title {
-      font-size: clamp(14px, 1.6vw, 18px);
+      font-size: clamp(13px, 1.5vw, 16px);
       font-weight: 700;
       color: var(--text);
       text-align: center;
       line-height: 1.3;
-      min-height: 2.6em;
+      min-height: 2.4em;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-
     .card-cat {
-      font-size: clamp(11px, 1.1vw, 13px);
+      font-size: clamp(10px, 1vw, 12px);
       color: var(--text-dim);
       text-align: center;
-      min-height: 1.4em;
+      min-height: 1.3em;
     }
-
     .card-img-wrap {
       flex: 1;
       min-height: 0;
       border-radius: 10px;
       overflow: hidden;
-      background: #1a1f2e;
+      background: #111622;
       display: flex;
       align-items: center;
       justify-content: center;
-      position: relative;
     }
     .card-img {
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       object-fit: contain;
       display: none;
     }
     .card-img.loaded { display: block; }
-    .img-placeholder {
-      font-size: 48px;
-      opacity: 0.3;
-    }
+    .img-ph { font-size: 40px; opacity: .3; }
 
-    /* ── Время ── */
-    .card-time-wrap {
-      text-align: center;
-      padding: 8px 0 4px;
-    }
+    /* Время */
+    .card-time-wrap { text-align: center; padding: 6px 4px 2px; }
     .card-time {
-      font-size: clamp(18px, 2.2vw, 26px);
+      font-size: clamp(15px, 2vw, 22px);
       font-weight: 800;
       font-variant-numeric: tabular-nums;
-      letter-spacing: 0.5px;
       display: inline-block;
+      word-break: break-all;
     }
-    /* Анимация появления времени */
     .card-time.reveal {
-      animation: timeReveal 0.45s cubic-bezier(.34,1.56,.64,1);
+      animation: timeReveal .4s cubic-bezier(.34,1.56,.64,1);
     }
     @keyframes timeReveal {
-      from { opacity: 0; transform: scale(0.6) translateY(8px); filter: blur(4px); }
-      to   { opacity: 1; transform: scale(1)   translateY(0);   filter: blur(0); }
+      from { opacity:0; transform:scale(.6) translateY(6px); filter:blur(4px); }
+      to   { opacity:1; transform:scale(1)  translateY(0);   filter:blur(0); }
     }
     .card-time.known  { color: var(--green); }
-    .card-time.hidden { color: #718096; letter-spacing: 4px; font-size: clamp(22px, 2.8vw, 32px); }
+    .card-time.hidden { color: var(--text-dim); letter-spacing: 3px; }
 
-    .card-hint {
-      font-size: clamp(10px, 1vw, 12px);
-      color: var(--text-dim);
+    /* ── Score pop ── */
+    @keyframes scorePop {
+      0%   { transform: scale(1); }
+      45%  { transform: scale(1.45); }
+      100% { transform: scale(1); }
+    }
+    .score-pop { animation: scorePop .35s cubic-bezier(.34,1.56,.64,1); }
+
+    /* ════════════════════════════════
+       GAME OVER SCREEN
+    ════════════════════════════════ */
+    #over-screen {
+      align-items: center;
+      justify-content: center;
+      gap: 28px;
+      padding: 24px;
+      background: var(--bg);
       text-align: center;
-      font-style: italic;
-      padding-bottom: 4px;
+    }
+    .over-title {
+      font-size: clamp(28px, 5vw, 52px);
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .over-mode {
+      font-size: clamp(12px, 1.5vw, 15px);
+      color: var(--text-dim);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    .over-score-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+    }
+    .over-score-lbl {
+      font-size: clamp(12px, 1.5vw, 15px);
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .over-score {
+      font-size: clamp(56px, 10vw, 96px);
+      font-weight: 900;
+      color: var(--text);
+      line-height: 1;
+    }
+    .over-score.pos { color: var(--green); }
+    .over-score.neg { color: var(--red); }
+
+    .over-buttons {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn {
+      padding: clamp(10px,1.5vw,14px) clamp(20px,3vw,36px);
+      border-radius: 50px;
+      border: none;
+      font-size: clamp(13px, 1.5vw, 16px);
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s;
+      letter-spacing: .5px;
+    }
+    .btn:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+    }
+    .btn-secondary {
+      background: var(--bg3);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,.1);
     }
 
     /* ── Loading overlay ── */
     #loading {
-      position: fixed;
-      inset: 0;
-      background: rgba(26,31,46,0.96);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      z-index: 150;
+      position: fixed; inset: 0;
+      background: rgba(15,17,23,.96);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 18px; z-index: 200;
       backdrop-filter: blur(6px);
     }
     #loading h2 {
-      font-size: clamp(20px, 3vw, 28px);
-      font-weight: 800;
-      color: var(--text);
+      font-size: clamp(18px, 3vw, 26px);
+      font-weight: 800; color: var(--text);
     }
-    #loading-sub {
-      font-size: 14px;
-      color: var(--text-dim);
-      text-align: center;
-      max-width: 320px;
-    }
+    #loading-sub { font-size: 13px; color: var(--text-dim); text-align: center; }
     .spinner {
-      width: 52px; height: 52px;
-      border: 5px solid rgba(255,255,255,0.08);
+      width: 48px; height: 48px;
+      border: 5px solid rgba(255,255,255,.07);
       border-top-color: var(--accent);
       border-radius: 50%;
-      animation: spin 0.85s linear infinite;
+      animation: spin .85s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── Toast ── */
     #toast {
-      position: fixed;
-      bottom: 24px; left: 50%;
-      transform: translateX(-50%) translateY(12px);
-      background: #c62828;
-      color: #fff;
-      padding: 12px 28px;
-      border-radius: 50px;
-      font-size: 14px;
-      display: none;
-      opacity: 0;
-      z-index: 999;
-      max-width: 90vw;
-      text-align: center;
-      transition: opacity 0.3s, transform 0.3s;
+      position: fixed; bottom: 20px; left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: #c62828; color: #fff;
+      padding: 10px 24px; border-radius: 50px;
+      font-size: 13px; display: none; opacity: 0;
+      z-index: 999; max-width: 90vw; text-align: center;
+      transition: opacity .3s, transform .3s;
     }
-    #toast.show {
-      display: block;
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
+    #toast.show { display: block; opacity: 1; transform: translateX(-50%) translateY(0); }
 
-    /* ── Score pop ── */
-    @keyframes scorePop {
-      0%   { transform: scale(1); }
-      45%  { transform: scale(1.4); }
-      100% { transform: scale(1); }
-    }
-    .score-pop { animation: scorePop 0.35s cubic-bezier(.34,1.56,.64,1); }
-
-    /* ── Mobile: вертикальная раскладка ── */
-    @media (max-width: 700px) or (orientation: portrait) {
-      header { padding: 12px 16px 0; }
+    /* ── Mobile ── */
+    @media (max-width: 640px) {
       .arena {
         flex-direction: column;
-        gap: 12px;
-        padding: 10px 12px;
         align-items: stretch;
+        padding: 6px 10px 10px;
+        gap: 8px;
       }
       .card { max-width: 100%; }
-      .vs-col { flex-direction: row; justify-content: center; gap: 24px; }
-      .vs-badge { font-size: clamp(24px, 6vw, 36px); }
-      .vs-hint { display: none; }
-      .card-img-wrap { min-height: 180px; max-height: 220px; }
-    }
-
-    @media (max-width: 400px) {
-      .score-panel { padding: 6px 14px; }
-      .logo { font-size: 18px; }
+      .vs-col { flex-direction: row; gap: 20px; justify-content: center; }
+      .card-img-wrap { min-height: 140px; max-height: 200px; }
+      .modes-grid { flex-direction: column; align-items: center; }
+      .mode-card { max-width: 100%; width: 100%; min-width: 0; }
     }
   </style>
 </head>
 <body>
 
-<!-- Progress -->
 <div id="progress-bar"></div>
+<div id="toast"></div>
 
-<!-- Loading overlay -->
+<!-- Loading -->
 <div id="loading">
   <div class="spinner"></div>
   <h2>Загрузка игр…</h2>
   <div id="loading-sub">Подключаемся к speedrun.com</div>
 </div>
 
-<!-- Toast -->
-<div id="toast"></div>
+<!-- ══ START SCREEN ══ -->
+<div class="screen" id="start-screen">
+  <div class="start-logo">
+    <div class="title">SPEEDRUN QUIZ BATTLE</div>
+    <div class="subtitle">Чей мировой рекорд быстрее?</div>
+  </div>
 
-<!-- Header -->
-<header>
-  <div class="logo">MEGA <span>QIZ</span></div>
-  <div class="score-panel">
-    <span class="score-label">Счёт</span>
+  <div class="modes-grid">
+
+    <div class="mode-card endless" onclick="startGame('endless')">
+      <span class="mode-icon">∞</span>
+      <div class="mode-name">Бесконечный</div>
+      <div class="mode-desc">
+        Играй без ограничений.<br>
+        +1 за верный ответ,<br>
+        −1 за неверный.
+      </div>
+    </div>
+
+    <div class="mode-card normal" onclick="startGame('normal')">
+      <span class="mode-icon">❤️❤️❤️</span>
+      <div class="mode-name">Нормальный</div>
+      <div class="mode-desc">
+        3 жизни.<br>
+        +1 за верный ответ,<br>
+        ошибка = −1 жизнь.
+      </div>
+    </div>
+
+    <div class="mode-card hardcore" onclick="startGame('hardcore')">
+      <span class="mode-icon">💔</span>
+      <div class="mode-name">Хардкор</div>
+      <div class="mode-desc">
+        Одна ошибка — конец игры.<br>
+        +1 за каждый<br>верный ответ.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ GAME SCREEN ══ -->
+<div class="screen" id="game-screen">
+
+  <!-- Header -->
+  <div class="game-header">
+    <div class="game-logo">SQB</div>
+    <div id="lives-bar"></div>
+  </div>
+
+  <!-- Pool counter -->
+  <div id="pool-counter"></div>
+
+  <!-- Score center -->
+  <div class="score-center">
+    <div class="score-lbl">Счёт</div>
     <div id="score">0</div>
   </div>
-</header>
 
-<!-- Pool counter -->
-<div id="pool-counter"></div>
+  <!-- Arena -->
+  <div class="arena">
 
-<!-- Arena -->
-<div class="arena">
-
-  <!-- Card 1 -->
-  <div class="card" id="card1" onclick="cardClick(1, event)">
-    <div class="card-inner">
-      <div class="card-title"  id="gname1">…</div>
-      <div class="card-cat"    id="kname1"></div>
-      <div class="card-img-wrap">
-        <span class="img-placeholder" id="img1-placeholder">🎮</span>
-        <img class="card-img" id="img1" alt="" />
+    <div class="card" id="card1" onclick="cardClick(1,event)">
+      <div class="card-inner">
+        <div class="card-title" id="gname1">…</div>
+        <div class="card-cat"   id="kname1"></div>
+        <div class="card-img-wrap">
+          <span class="img-ph" id="img1-placeholder">🎮</span>
+          <img class="card-img" id="img1" alt="" />
+        </div>
+        <div class="card-time-wrap">
+          <div class="card-time known" id="time1"></div>
+        </div>
       </div>
-      <div class="card-time-wrap">
-        <div class="card-time known" id="time1"></div>
-      </div>
-      <div class="card-hint">Время знаем ↑</div>
     </div>
-  </div>
 
-  <!-- VS -->
-  <div class="vs-col">
-    <div class="vs-badge">VS</div>
-    <div class="vs-hint">Нажми на карточку<br>с более быстрым рекордом</div>
-  </div>
-
-  <!-- Card 2 -->
-  <div class="card" id="card2" onclick="cardClick(2, event)">
-    <div class="card-inner">
-      <div class="card-title"  id="gname2">…</div>
-      <div class="card-cat"    id="kname2"></div>
-      <div class="card-img-wrap">
-        <span class="img-placeholder" id="img2-placeholder">🎮</span>
-        <img class="card-img" id="img2" alt="" />
-      </div>
-      <div class="card-time-wrap">
-        <div class="card-time hidden" id="time2">???</div>
-      </div>
-      <div class="card-hint">Угадай время ↑</div>
+    <div class="vs-col">
+      <div class="vs-badge">VS</div>
     </div>
-  </div>
 
+    <div class="card" id="card2" onclick="cardClick(2,event)">
+      <div class="card-inner">
+        <div class="card-title" id="gname2">…</div>
+        <div class="card-cat"   id="kname2"></div>
+        <div class="card-img-wrap">
+          <span class="img-ph" id="img2-placeholder">🎮</span>
+          <img class="card-img" id="img2" alt="" />
+        </div>
+        <div class="card-time-wrap">
+          <div class="card-time hidden" id="time2">???</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══ GAME OVER SCREEN ══ -->
+<div class="screen" id="over-screen">
+  <div class="over-title">Игра окончена</div>
+  <div class="over-mode" id="over-mode-label"></div>
+  <div class="over-score-wrap">
+    <div class="over-score-lbl">Счёт</div>
+    <div class="over-score" id="over-score">0</div>
+  </div>
+  <div class="over-buttons">
+    <button class="btn btn-primary"    onclick="restartGame()">Играть снова</button>
+    <button class="btn btn-secondary"  onclick="goToStart()">На главную</button>
+  </div>
 </div>
 
 <script>
 /* ═══════════════════════════════════════════════════════════════
    CONFIG
 ═══════════════════════════════════════════════════════════════ */
-const API_BASE    = 'https://www.speedrun.com/api/v1';
-const CORS_PROXY  = 'https://corsproxy.io/?url=';   // публичный CORS-прокси
-const SWAP_DELAY  = 2000; // мс до следующей пары
+const API_BASE   = 'https://www.speedrun.com/api/v1';
+const CORS_PROXY = 'https://corsproxy.io/?url=';
+const SWAP_DELAY = 2000;
+const MAX_POOL   = 20;   // максимум игр в пуле
 
 /* ═══════════════════════════════════════════════════════════════
    STATE
 ═══════════════════════════════════════════════════════════════ */
-let pool        = [];          // массив TGameRecord-подобных объектов
+let pool        = [];
+let totalIds    = 0;
 let gameStarted = false;
 let waitSwap    = false;
 let score       = 0;
+let lives       = 3;
+let gameMode    = '';   // 'endless' | 'normal' | 'hardcore'
 let idx1 = -1, idx2 = -1;
 let queue = [], queuePos = 0;
-let swapTimer = null;
-let totalIds  = 0;  // сколько всего ID в списке
+let swapTimer   = null;
+let _apiMethod  = 'direct';
 
-
+/* ═══════════════════════════════════════════════════════════════
+   SCREENS
+═══════════════════════════════════════════════════════════════ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
 
 /* ═══════════════════════════════════════════════════════════════
    UTILITIES
@@ -491,36 +674,27 @@ function shuffle(arr) {
   return arr;
 }
 
-// ISO 8601 duration "PT1H2M3.456S" → seconds (float)
 function isoToSec(iso) {
   if (!iso || !iso.startsWith('PT')) return 0;
   let s = iso.slice(2), h = 0, m = 0, sec = 0;
-  const hm = s.match(/(\d+)H/); if (hm) { h   = +hm[1]; }
-  const mm = s.match(/(\d+)M/); if (mm) { m   = +mm[1]; }
-  const sm = s.match(/([\d.]+)S/); if (sm) { sec = +sm[1]; }
+  const hm = s.match(/(\d+)H/);   if (hm) h   = +hm[1];
+  const mm = s.match(/(\d+)M/);   if (mm) m   = +mm[1];
+  const sm = s.match(/([\d.]+)S/);if (sm) sec = +sm[1];
   return h * 3600 + m * 60 + sec;
 }
 
-// ISO 8601 duration → display string "Xч Xм Xс [Xмс]"
 function isoToDisplay(iso) {
-  const total = isoToSec(iso);
-  const h   = Math.floor(total / 3600);
-  const m   = Math.floor((total % 3600) / 60);
-  const s   = Math.floor(total % 60);
-  const ms  = Math.round((total % 1) * 1000);
+  const t  = isoToSec(iso);
+  const h  = Math.floor(t / 3600);
+  const m  = Math.floor((t % 3600) / 60);
+  const s  = Math.floor(t % 60);
+  const ms = Math.round((t % 1) * 1000);
   let r = '';
   if (h > 0) r += h + 'ч ';
   if (m > 0 || h > 0) r += m + 'м ';
   r += s + 'с';
   if (ms > 0) r += ' ' + ms + 'мс';
   return r.trim();
-}
-
-function showToast(msg, dur = 3500) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => { t.classList.remove('show'); }, dur);
 }
 
 function setProgress(pct) {
@@ -530,40 +704,37 @@ function setProgress(pct) {
 function updatePoolCounter() {
   const el = document.getElementById('pool-counter');
   if (!el) return;
-  const target = totalIds || '?';
-  if (totalIds > 0 && pool.length >= totalIds) {
-    el.textContent = `✓ Загружено ${pool.length} игр`;
-  } else {
-    el.textContent = `⏳ Загружено игр: ${pool.length} / ${target}`;
-  }
+  if (pool.length >= totalIds && totalIds > 0)
+    el.textContent = '✓ Загружено ' + pool.length + ' игр';
+  else
+    el.textContent = '⏳ ' + pool.length + ' / ' + (totalIds || '?');
+}
+
+function showToast(msg, dur = 3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   API  (с повторами и задержкой при 429)
+   API
 ═══════════════════════════════════════════════════════════════ */
-// Кешируем успешный метод (direct / proxy) чтобы не пробовать лишний раз
-let _apiMethod = 'direct'; // 'direct' | 'proxy'
-
 async function apiGet(url, maxRetry = 3) {
   let delay = 400;
   for (let i = 0; i <= maxRetry; i++) {
     try {
       let res;
       if (_apiMethod === 'direct') {
-        try {
-          res = await fetch(url);
-        } catch (_) {
-          _apiMethod = 'proxy';
-          res = await fetch(CORS_PROXY + encodeURIComponent(url));
-        }
+        try { res = await fetch(url); }
+        catch (_) { _apiMethod = 'proxy'; res = await fetch(CORS_PROXY + encodeURIComponent(url)); }
       } else {
         res = await fetch(CORS_PROXY + encodeURIComponent(url));
       }
       if (res.status === 200) return res.json();
-      if (res.status === 420 || res.status === 429) {
-        console.warn(`Rate limited (${res.status}) — waiting 15s...`);
-        await sleep(15000);
-        continue;
+      if (res.status === 429 || res.status === 420) {
+        console.warn('Rate limited — waiting 15s');
+        await sleep(15000); continue;
       }
     } catch (_) {}
     if (i < maxRetry) await sleep(delay);
@@ -574,7 +745,6 @@ async function apiGet(url, maxRetry = 3) {
 
 async function imageExists(url) {
   if (!url) return false;
-  // Проверяем загрузкой через Image — работает без CORS-ограничений для изображений
   return new Promise(resolve => {
     const img = new Image();
     img.onload  = () => resolve(true);
@@ -588,83 +758,54 @@ function buildCoverURL(apiId) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   FETCH ONE GAME BY ID/SLUG
-   → record { id, gameName, catName, wrTime, wrTimeSec, image }
+   FETCH ONE GAME
 ═══════════════════════════════════════════════════════════════ */
 async function fetchOneBySlug(slug) {
-  // 1. Game info — пробуем сначала как abbreviation, потом как id
   let data = null;
   const j1 = await apiGet(`${API_BASE}/games/${slug}`);
-  if (j1 && j1.data) {
-    data = j1.data;
-  } else {
+  if (j1 && j1.data) data = j1.data;
+  else {
     const j2 = await apiGet(`${API_BASE}/games?abbreviation=${encodeURIComponent(slug)}&max=1`);
     if (j2 && j2.data && j2.data.length > 0) data = j2.data[0];
   }
-  if (!data) {
-    console.warn(`[skip] не найдена игра: ${slug}`);
-    return null;
-  }
+  if (!data) { console.warn('[skip] not found:', slug); return null; }
 
   const apiId    = data.id;
   const gameName = (data.names && data.names.international) || slug;
-  let   coverURL = (data.assets && data.assets['cover-large']  && data.assets['cover-large'].uri)
-                || (data.assets && data.assets['cover-medium'] && data.assets['cover-medium'].uri)
+  let   coverURL = (data.assets?.['cover-large']?.uri)
+                || (data.assets?.['cover-medium']?.uri)
                 || buildCoverURL(apiId);
 
-  // 2. Категория + проверка обложки — параллельно
-  const [catResult, coverOK] = await Promise.all([
+  const [catResult] = await Promise.all([
     (async () => {
       const jc = await apiGet(`${API_BASE}/games/${apiId}/categories?miscellaneous=no`);
       if (!jc || !jc.data) return null;
-      for (const cat of jc.data) {
+      for (const cat of jc.data)
         if (cat.type === 'per-game') return { id: cat.id, name: cat.name };
-      }
-      // Нет per-game категорий — берём первую любую
       if (jc.data.length > 0) return { id: jc.data[0].id, name: jc.data[0].name };
       return null;
     })(),
     (async () => {
-      let ok = await imageExists(coverURL);
-      if (!ok) {
-        const fb = buildCoverURL(apiId);
-        if (fb !== coverURL) { ok = await imageExists(fb); if (ok) coverURL = fb; }
-      }
-      // Если обложка не найдена — используем fallback без проверки
-      if (!ok) coverURL = buildCoverURL(apiId);
-      return true; // не блокируем из-за обложки
+      const ok = await imageExists(coverURL);
+      if (!ok) { const fb = buildCoverURL(apiId); if (fb !== coverURL) coverURL = fb; }
     })()
   ]);
 
-  if (!catResult) {
-    console.warn(`[skip] нет категорий: ${slug}`);
-    return null;
-  }
+  if (!catResult) { console.warn('[skip] no cats:', slug); return null; }
 
-  // 3. Мировой рекорд
   const jl = await apiGet(
     `${API_BASE}/leaderboards/${apiId}/category/${catResult.id}?top=1`
   );
-  if (!jl || !jl.data || !jl.data.runs || jl.data.runs.length === 0) {
-    console.warn(`[skip] нет рекордов: ${slug} / cat ${catResult.id}`);
-    return null;
-  }
+  if (!jl?.data?.runs?.length) { console.warn('[skip] no WR:', slug); return null; }
   const primary = jl.data.runs[0].run.times.primary;
   if (!primary) return null;
 
-  return {
-    id:        slug,
-    gameName:  gameName,
-    catName:   catResult.name,
-    wrTime:    primary,
-    wrTimeSec: isoToSec(primary),
-    image:     coverURL
-  };
+  return { id: slug, gameName, catName: catResult.name,
+           wrTime: primary, wrTimeSec: isoToSec(primary), image: coverURL };
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   PRE-CREATED  (Pre-created.json — только список ID)
-   Загружаем ID → фетчим каждую игру через API → добавляем в пул
+   PRE-CREATED — случайные 20 из списка
 ═══════════════════════════════════════════════════════════════ */
 async function loadPreCreated() {
   let ids = [];
@@ -674,41 +815,35 @@ async function loadPreCreated() {
     const json = await res.json();
     ids = (json.games || []).map(g => g.id).filter(Boolean);
   } catch (_) { return; }
-
   if (ids.length === 0) return;
 
-  // Перемешиваем чтобы каждый старт давал разный порядок
+  // Берём случайные MAX_POOL штук
   shuffle(ids);
+  ids = ids.slice(0, MAX_POOL);
   totalIds = ids.length;
   updatePoolCounter();
 
-  // Загружаем по одной — так не нагружаем API и не получаем 429
   for (const id of ids) {
     const rec = await fetchOneBySlug(id);
     if (rec) addToPool(rec);
-    // Небольшая пауза между запросами чтобы не триггерить rate limit
     await sleep(300);
   }
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   POOL MANAGEMENT
+   POOL
 ═══════════════════════════════════════════════════════════════ */
 function addToPool(rec) {
   pool.push(rec);
   setProgress(totalIds > 0 ? Math.min(100, pool.length / totalIds * 100) : 0);
-  updateLoadingText();
-  updatePoolCounter();
-  tryStartGame();
-}
-
-function updateLoadingText() {
   const sub = document.getElementById('loading-sub');
-  if (sub) sub.textContent = `Загружено игр: ${pool.length} / ${totalIds || '?'}`;
+  if (sub) sub.textContent = 'Загружено: ' + pool.length + ' / ' + (totalIds || '?');
+  updatePoolCounter();
+  if (gameStarted) rebuildQueue();
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   QUEUE  (Fisher-Yates shuffle, переход без повторов)
+   QUEUE
 ═══════════════════════════════════════════════════════════════ */
 function rebuildQueue() {
   queue = pool.map((_, i) => i);
@@ -724,7 +859,6 @@ function nextIndex(excludeIdx) {
     const r = queue[queuePos++];
     if (r !== excludeIdx) return r;
     if (++tries > pool.length * 2) {
-      // fallback
       let r2;
       do { r2 = Math.floor(Math.random() * pool.length); } while (r2 === excludeIdx);
       return r2;
@@ -733,44 +867,87 @@ function nextIndex(excludeIdx) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   LIVES
+═══════════════════════════════════════════════════════════════ */
+function renderLives() {
+  const bar = document.getElementById('lives-bar');
+  if (!bar) return;
+  if (gameMode === 'endless') { bar.innerHTML = '<span style="font-size:20px">∞</span>'; return; }
+  if (gameMode === 'hardcore') { bar.innerHTML = '<span style="font-size:20px">💔</span>'; return; }
+  // normal: 3 жизни
+  bar.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const s = document.createElement('span');
+    s.className = 'life' + (i >= lives ? ' lost' : '');
+    s.textContent = '❤️';
+    bar.appendChild(s);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   START / RESTART / GAME OVER
+═══════════════════════════════════════════════════════════════ */
+function startGame(mode) {
+  gameMode    = mode;
+  score       = 0;
+  lives       = 3;
+  gameStarted = false;
+  waitSwap    = false;
+
+  document.getElementById('score').textContent = '0';
+  document.getElementById('score').className   = '';
+  renderLives();
+  showScreen('game-screen');
+  tryStartGame();
+}
+
+function restartGame() {
+  startGame(gameMode);
+}
+
+function goToStart() {
+  showScreen('start-screen');
+}
+
+function gameOver() {
+  // Заполняем экран результата
+  const modeNames = { endless: '∞ Бесконечный', normal: '❤️ Нормальный', hardcore: '💔 Хардкор' };
+  document.getElementById('over-mode-label').textContent = modeNames[gameMode] || '';
+  const el = document.getElementById('over-score');
+  el.textContent = score;
+  el.className = 'over-score' + (score > 0 ? ' pos' : score < 0 ? ' neg' : '');
+  showScreen('over-screen');
+}
+
+/* ═══════════════════════════════════════════════════════════════
    GAME LOGIC
 ═══════════════════════════════════════════════════════════════ */
 function tryStartGame() {
-  if (gameStarted) {
-    // обновляем очередь при пополнении пула
-    rebuildQueue();
-    return;
-  }
+  if (gameStarted) return;
   if (pool.length < 2) return;
 
   gameStarted = true;
   document.getElementById('loading').style.display = 'none';
 
-    rebuildQueue();
+  rebuildQueue();
   idx1 = nextIndex(-1);
   idx2 = nextIndex(idx1);
 
   showCard(idx1, 1, true);
   showCard(idx2, 2, true);
-
   setCardsEnabled(true);
 }
 
-function displayTime(rec) {
-  return isoToDisplay(rec.wrTime);
-}
+function displayTime(rec) { return isoToDisplay(rec.wrTime); }
 
-// Ripple эффект при клике
 function spawnRipple(card, event) {
-  const rect   = card.getBoundingClientRect();
-  const size   = Math.max(rect.width, rect.height);
-  const x      = (event.clientX - rect.left) - size / 2;
-  const y      = (event.clientY - rect.top)  - size / 2;
-  const ripple = document.createElement('span');
-  ripple.className = 'ripple';
-  ripple.style.cssText = `width:${size}px;height:${size}px;left:${x}px;top:${y}px`;
-  card.appendChild(ripple);
-  ripple.addEventListener('animationend', () => ripple.remove());
+  const rect = card.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  const r    = document.createElement('span');
+  r.className   = 'ripple';
+  r.style.cssText = `width:${size}px;height:${size}px;left:${event.clientX-rect.left-size/2}px;top:${event.clientY-rect.top-size/2}px`;
+  card.appendChild(r);
+  r.addEventListener('animationend', () => r.remove());
 }
 
 function showCard(index, position, animate = false) {
@@ -787,35 +964,27 @@ function showCard(index, position, animate = false) {
   gname.textContent = rec.gameName;
   kname.textContent = rec.catName;
 
-  // Для карточки 1 — показываем время сразу, для карточки 2 — скрываем
   if (position === 1) {
-    timEl.className = 'card-time known';
+    timEl.className   = 'card-time known';
     timEl.textContent = displayTime(rec);
   } else {
-    timEl.className = 'card-time hidden';
+    timEl.className   = 'card-time hidden';
     timEl.textContent = '???';
   }
 
-  // Анимация появления карточки
   if (animate) {
     card.classList.remove('fade-in');
     void card.offsetWidth;
     card.classList.add('fade-in');
   }
 
-  // Сброс изображения
   img.classList.remove('loaded');
   img.src = '';
   ph.style.display = 'flex';
 
-  const tryLoad = (url) => new Promise((resolve) => {
+  const tryLoad = url => new Promise(resolve => {
     const i = new Image();
-    i.onload  = () => {
-      img.src = url;
-      img.classList.add('loaded');
-      ph.style.display = 'none';
-      resolve(true);
-    };
+    i.onload  = () => { img.src = url; img.classList.add('loaded'); ph.style.display = 'none'; resolve(true); };
     i.onerror = () => resolve(false);
     i.src = url;
   });
@@ -826,29 +995,33 @@ function showCard(index, position, animate = false) {
   })();
 }
 
-function animateScore(correct) {
-  const el = document.getElementById('score');
-  // Обновляем цвет счёта
+function animateScore() {
+  const el  = document.getElementById('score');
   const val = parseInt(el.textContent, 10);
   el.classList.remove('positive', 'negative');
   if (val > 0) el.classList.add('positive');
   else if (val < 0) el.classList.add('negative');
-  // Анимация
   el.classList.remove('score-pop');
   void el.offsetWidth;
   el.classList.add('score-pop');
   el.addEventListener('animationend', () => el.classList.remove('score-pop'), { once: true });
 }
 
+function setCardsEnabled(en) {
+  ['card1','card2'].forEach(id => {
+    const c = document.getElementById(id);
+    en ? c.classList.remove('disabled') : c.classList.add('disabled');
+  });
+}
+
 function cardClick(choice, event) {
   if (waitSwap || !gameStarted) return;
 
-  // Ripple
   if (event) spawnRipple(document.getElementById(`card${choice}`), event);
 
-  // Открываем скрытое время карточки 2 с анимацией
+  // Открываем время карточки 2
   const t2El = document.getElementById('time2');
-  t2El.className = 'card-time known reveal';
+  t2El.className   = 'card-time known reveal';
   t2El.textContent = displayTime(pool[idx2]);
   t2El.addEventListener('animationend', () => t2El.classList.remove('reveal'), { once: true });
 
@@ -857,22 +1030,44 @@ function cardClick(choice, event) {
 
   const card1 = document.getElementById('card1');
   const card2 = document.getElementById('card2');
-  card1.classList.remove('correct', 'wrong', 'draw');
-  card2.classList.remove('correct', 'wrong', 'draw');
+  card1.classList.remove('correct','wrong','draw');
+  card2.classList.remove('correct','wrong','draw');
 
-  if (Math.abs(sec1 - sec2) < 0.001) {
-    // Ничья
+  const isDraw    = Math.abs(sec1 - sec2) < 0.001;
+  const isCorrect = !isDraw && (choice === 1 ? sec1 < sec2 : sec2 < sec1);
+
+  if (isDraw) {
     card1.classList.add('draw');
     card2.classList.add('draw');
-  } else {
-    const isCorrect = choice === 1 ? sec1 < sec2 : sec2 < sec1;
-    document.getElementById(`card${choice}`).classList.add(isCorrect ? 'correct' : 'wrong');
-    if (isCorrect) score++; else score--;
+  } else if (isCorrect) {
+    document.getElementById(`card${choice}`).classList.add('correct');
+    score++;
     document.getElementById('score').textContent = score;
-    animateScore(isCorrect);
+    animateScore();
+  } else {
+    document.getElementById(`card${choice}`).classList.add('wrong');
+    // Обработка жизней по режиму
+    if (gameMode === 'endless') {
+      score--;
+      document.getElementById('score').textContent = score;
+      animateScore();
+    } else if (gameMode === 'normal') {
+      lives--;
+      renderLives();
+      if (lives <= 0) {
+        waitSwap = true;
+        setCardsEnabled(false);
+        setTimeout(gameOver, 1200);
+        return;
+      }
+    } else if (gameMode === 'hardcore') {
+      waitSwap = true;
+      setCardsEnabled(false);
+      setTimeout(gameOver, 1200);
+      return;
+    }
   }
 
-  // Сдвиг: card2 → card1
   idx1 = idx2;
   idx2 = nextIndex(idx1);
 
@@ -880,8 +1075,8 @@ function cardClick(choice, event) {
   setCardsEnabled(false);
 
   swapTimer = setTimeout(() => {
-    card1.classList.remove('correct', 'wrong', 'draw');
-    card2.classList.remove('correct', 'wrong', 'draw');
+    card1.classList.remove('correct','wrong','draw');
+    card2.classList.remove('correct','wrong','draw');
     showCard(idx1, 1, false);
     showCard(idx2, 2, true);
     waitSwap = false;
@@ -889,31 +1084,16 @@ function cardClick(choice, event) {
   }, SWAP_DELAY);
 }
 
-function setCardsEnabled(en) {
-  const c1 = document.getElementById('card1');
-  const c2 = document.getElementById('card2');
-  if (en) {
-    c1.classList.remove('disabled');
-    c2.classList.remove('disabled');
-  } else {
-    c1.classList.add('disabled');
-    c2.classList.add('disabled');
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   Фонового фетчера больше нет — работаем только со списком ID
-═══════════════════════════════════════════════════════════════ */
-
 /* ═══════════════════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════════════════ */
 (async () => {
+  showScreen('start-screen');
+  // Загружаем пул в фоне пока пользователь на старт-экране
   await loadPreCreated();
-  // Если после загрузки всего списка игр меньше 2 — сообщаем
+  document.getElementById('loading').style.display = 'none';
   if (pool.length < 2) {
-    const sub = document.getElementById('loading-sub');
-    if (sub) sub.textContent = 'Не удалось загрузить достаточно игр. Проверьте Pre-created.json';
+    showToast('Не удалось загрузить игры. Проверьте Pre-created.json');
   }
 })();
 </script>
