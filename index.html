@@ -476,23 +476,7 @@ let queue = [], queuePos = 0;
 let swapTimer = null;
 let totalIds  = 0;  // сколько всего ID в списке
 
-/* ═══════════════════════════════════════════════════════════════
-   SCALING (как ScaleLayout в Delphi)
-═══════════════════════════════════════════════════════════════ */
-function scaleLayout() {
-  const root = document.getElementById('root');
-  const sx   = window.innerWidth  / 1600;
-  const sy   = window.innerHeight / 900;
-  const s    = Math.min(sx, sy);
-  const nw   = 1600 * s;
-  const nh   = 900  * s;
-  root.style.transform  = `scale(${s})`;
-  root.style.left       = ((window.innerWidth  - nw) / 2) + 'px';
-  root.style.top        = ((window.innerHeight - nh) / 2) + 'px';
-  root.style.position   = 'absolute';
-}
-window.addEventListener('resize', scaleLayout);
-scaleLayout();
+
 
 /* ═══════════════════════════════════════════════════════════════
    UTILITIES
