@@ -308,21 +308,19 @@
 ═══════════════════════════════════════════════════════════════ */
 const API_BASE    = 'https://www.speedrun.com/api/v1';
 const CORS_PROXY  = 'https://corsproxy.io/?url=';   // публичный CORS-прокси
-const POOL_TARGET = 30;   // сколько уникальных игр набрать
 const SWAP_DELAY  = 2000; // мс до следующей пары
 
 /* ═══════════════════════════════════════════════════════════════
    STATE
 ═══════════════════════════════════════════════════════════════ */
 let pool        = [];          // массив TGameRecord-подобных объектов
-let seenSlugs   = new Set();
 let gameStarted = false;
 let waitSwap    = false;
 let score       = 0;
 let idx1 = -1, idx2 = -1;
 let queue = [], queuePos = 0;
 let swapTimer = null;
-let fetching  = false;
+let totalIds  = 0;  // сколько всего ID в списке
 
 /* ═══════════════════════════════════════════════════════════════
    SCALING (как ScaleLayout в Delphi)
@@ -394,10 +392,11 @@ function setProgress(pct) {
 function updatePoolCounter() {
   const el = document.getElementById('pool-counter');
   if (!el) return;
-  if (pool.length >= POOL_TARGET) {
+  const target = totalIds || '?';
+  if (totalIds > 0 && pool.length >= totalIds) {
     el.textContent = `✓ Загружено ${pool.length} игр`;
   } else {
-    el.textContent = `⏳ Загружено игр: ${pool.length} / ${POOL_TARGET}`;
+    el.textContent = `⏳ Загружено игр: ${pool.length} / ${target}`;
   }
 }
 
@@ -423,9 +422,9 @@ async function apiGet(url, maxRetry = 3) {
         res = await fetch(CORS_PROXY + encodeURIComponent(url));
       }
       if (res.status === 200) return res.json();
-      if (res.status === 429) {
-        console.warn('Rate limited — waiting 12s...');
-        await sleep(12000);
+      if (res.status === 420 || res.status === 429) {
+        console.warn(`Rate limited (${res.status}) — waiting 15s...`);
+        await sleep(15000);
         continue;
       }
     } catch (_) {}
@@ -451,46 +450,31 @@ function buildCoverURL(apiId) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   FETCH RANDOM GAME SLUG  (без Edge — через API)
-   Speedrun.com не имеет публичного /randomgame в API,
-   поэтому берём случайный offset из /games
-═══════════════════════════════════════════════════════════════ */
-let _totalGames = 0;
-
-async function fetchRandomSlug() {
-  // Первый раз — узнаём приблизительное кол-во игр
-  if (_totalGames === 0) {
-    const j = await apiGet(`${API_BASE}/games?max=1`);
-    if (j && j.pagination) _totalGames = j.pagination.size || 50000;
-    else _totalGames = 50000;
-  }
-  const offset = Math.floor(Math.random() * Math.min(_totalGames - 1, 49999));
-  const j = await apiGet(`${API_BASE}/games?max=1&offset=${offset}`);
-  if (!j || !j.data || j.data.length === 0) return null;
-  return j.data[0].abbreviation || j.data[0].id;
-}
-
-/* ═══════════════════════════════════════════════════════════════
-   FETCH ONE GAME  →  record { id, gameName, catName, wrTime, wrTimeSec, image }
+   FETCH ONE GAME BY ID/SLUG
+   → record { id, gameName, catName, wrTime, wrTimeSec, image }
 ═══════════════════════════════════════════════════════════════ */
 async function fetchOneBySlug(slug) {
-  // 1. Game info
+  // 1. Game info — пробуем сначала как abbreviation, потом как id
   let data = null;
-  let j = await apiGet(`${API_BASE}/games/${slug}`);
-  if (j && j.data) data = j.data;
-  else {
-    const j2 = await apiGet(`${API_BASE}/games?abbreviation=${slug}&max=1`);
+  const j1 = await apiGet(`${API_BASE}/games/${slug}`);
+  if (j1 && j1.data) {
+    data = j1.data;
+  } else {
+    const j2 = await apiGet(`${API_BASE}/games?abbreviation=${encodeURIComponent(slug)}&max=1`);
     if (j2 && j2.data && j2.data.length > 0) data = j2.data[0];
   }
-  if (!data) return null;
+  if (!data) {
+    console.warn(`[skip] не найдена игра: ${slug}`);
+    return null;
+  }
 
   const apiId    = data.id;
-  const gameName = (data.names && data.names.international) || data.id;
-  let   coverURL = (data.assets && data.assets['cover-large'] && data.assets['cover-large'].uri)
+  const gameName = (data.names && data.names.international) || slug;
+  let   coverURL = (data.assets && data.assets['cover-large']  && data.assets['cover-large'].uri)
                 || (data.assets && data.assets['cover-medium'] && data.assets['cover-medium'].uri)
                 || buildCoverURL(apiId);
 
-  // 2. Category + cover (параллельно)
+  // 2. Категория + проверка обложки — параллельно
   const [catResult, coverOK] = await Promise.all([
     (async () => {
       const jc = await apiGet(`${API_BASE}/games/${apiId}/categories?miscellaneous=no`);
@@ -498,6 +482,8 @@ async function fetchOneBySlug(slug) {
       for (const cat of jc.data) {
         if (cat.type === 'per-game') return { id: cat.id, name: cat.name };
       }
+      // Нет per-game категорий — берём первую любую
+      if (jc.data.length > 0) return { id: jc.data[0].id, name: jc.data[0].name };
       return null;
     })(),
     (async () => {
@@ -506,18 +492,25 @@ async function fetchOneBySlug(slug) {
         const fb = buildCoverURL(apiId);
         if (fb !== coverURL) { ok = await imageExists(fb); if (ok) coverURL = fb; }
       }
-      return ok;
+      // Если обложка не найдена — используем fallback без проверки
+      if (!ok) coverURL = buildCoverURL(apiId);
+      return true; // не блокируем из-за обложки
     })()
   ]);
 
-  if (!coverOK) return null;
-  if (!catResult) return null;
+  if (!catResult) {
+    console.warn(`[skip] нет категорий: ${slug}`);
+    return null;
+  }
 
-  // 3. World record
+  // 3. Мировой рекорд
   const jl = await apiGet(
     `${API_BASE}/leaderboards/${apiId}/category/${catResult.id}?top=1`
   );
-  if (!jl || !jl.data || !jl.data.runs || jl.data.runs.length === 0) return null;
+  if (!jl || !jl.data || !jl.data.runs || jl.data.runs.length === 0) {
+    console.warn(`[skip] нет рекордов: ${slug} / cat ${catResult.id}`);
+    return null;
+  }
   const primary = jl.data.runs[0].run.times.primary;
   if (!primary) return null;
 
@@ -525,72 +518,39 @@ async function fetchOneBySlug(slug) {
     id:        slug,
     gameName:  gameName,
     catName:   catResult.name,
-    wrTime:    primary,          // ISO 8601 duration
+    wrTime:    primary,
     wrTimeSec: isoToSec(primary),
     image:     coverURL
   };
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   PRE-CREATED  (Pre-created.json рядом с index.html)
+   PRE-CREATED  (Pre-created.json — только список ID)
+   Загружаем ID → фетчим каждую игру через API → добавляем в пул
 ═══════════════════════════════════════════════════════════════ */
 async function loadPreCreated() {
+  let ids = [];
   try {
     const res = await fetch('./Pre-created.json');
     if (!res.ok) return;
     const json = await res.json();
-    const games = json.games || [];
-    const records = [];
-    for (const g of games) {
-      if (!g.id || !g.GameName || !g.WRTime || !g.Image) continue;
-      records.push({
-        id:        g.id,
-        gameName:  g.GameName,
-        catName:   g.CatName  || '',
-        wrTime:    g.WRTime,
-        wrTimeSec: parseStoredTime(g.WRTime),
-        image:     g.Image
-      });
-    }
-    shuffle(records);
-    for (const r of records) {
-      if (!seenSlugs.has(r.id)) {
-        seenSlugs.add(r.id);
-        addToPool(r);
-      }
-    }
-  } catch (_) {}
-}
+    ids = (json.games || []).map(g => g.id).filter(Boolean);
+  } catch (_) { return; }
 
-// WRTime в Pre-created хранится в формате "M:SS" / "H:MM:SS" / "PTxxx"
-function parseStoredTime(t) {
-  if (!t) return 0;
-  if (t.startsWith('PT')) return isoToSec(t);
-  // "H:MM:SS" или "M:SS"
-  const parts = t.split(':');
-  if (parts.length === 3)
-    return +parts[0] * 3600 + +parts[1] * 60 + parseFloat(parts[2]);
-  if (parts.length === 2)
-    return +parts[0] * 60 + parseFloat(parts[1]);
-  return 0;
-}
+  if (ids.length === 0) return;
 
-// Форматирование для хранимого (не ISO) формата
-function formatStoredTime(t) {
-  if (!t) return '';
-  if (t.startsWith('PT')) return isoToDisplay(t);
-  // уже в читаемом виде — разберём как parseStoredTime
-  const sec = parseStoredTime(t);
-  const h  = Math.floor(sec / 3600);
-  const m  = Math.floor((sec % 3600) / 60);
-  const s  = Math.floor(sec % 60);
-  const ms = Math.round((sec % 1) * 1000);
-  let r = '';
-  if (h > 0) r += h + 'ч ';
-  if (m > 0 || h > 0) r += m + 'м ';
-  r += s + 'с';
-  if (ms > 0) r += ' ' + ms + 'мс';
-  return r.trim();
+  // Перемешиваем чтобы каждый старт давал разный порядок
+  shuffle(ids);
+  totalIds = ids.length;
+  updatePoolCounter();
+
+  // Загружаем по одной — так не нагружаем API и не получаем 429
+  for (const id of ids) {
+    const rec = await fetchOneBySlug(id);
+    if (rec) addToPool(rec);
+    // Небольшая пауза между запросами чтобы не триггерить rate limit
+    await sleep(300);
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -598,7 +558,7 @@ function formatStoredTime(t) {
 ═══════════════════════════════════════════════════════════════ */
 function addToPool(rec) {
   pool.push(rec);
-  setProgress(Math.min(100, pool.length / POOL_TARGET * 100));
+  setProgress(totalIds > 0 ? Math.min(100, pool.length / totalIds * 100) : 0);
   updateLoadingText();
   updatePoolCounter();
   tryStartGame();
@@ -606,7 +566,7 @@ function addToPool(rec) {
 
 function updateLoadingText() {
   const sub = document.getElementById('loading-sub');
-  if (sub) sub.textContent = `Загружено игр: ${pool.length} / ${POOL_TARGET}`;
+  if (sub) sub.textContent = `Загружено игр: ${pool.length} / ${totalIds || '?'}`;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -660,9 +620,7 @@ function tryStartGame() {
 }
 
 function displayTime(rec) {
-  return rec.wrTime.startsWith('PT')
-    ? isoToDisplay(rec.wrTime)
-    : formatStoredTime(rec.wrTime);
+  return isoToDisplay(rec.wrTime);
 }
 
 function showCard(index, position, animate = false) {
@@ -789,38 +747,19 @@ function setCardsEnabled(en) {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   BACKGROUND FETCHER  (аналог LoadDataAsync)
+   Фонового фетчера больше нет — работаем только со списком ID
 ═══════════════════════════════════════════════════════════════ */
-async function bgFetch() {
-  if (fetching) return;
-  fetching = true;
-
-  while (pool.length < POOL_TARGET) {
-    try {
-      const slug = await fetchRandomSlug();
-      if (!slug || seenSlugs.has(slug)) { await sleep(100); continue; }
-      seenSlugs.add(slug);
-
-      const rec = await fetchOneBySlug(slug);
-      if (!rec) { await sleep(150); continue; }
-
-      addToPool(rec);
-      await sleep(100);
-    } catch (e) {
-      await sleep(500);
-    }
-  }
-  fetching = false;
-}
 
 /* ═══════════════════════════════════════════════════════════════
    INIT
 ═══════════════════════════════════════════════════════════════ */
 (async () => {
-  // Сначала Pre-created (быстрый старт)
   await loadPreCreated();
-  // Затем фоновая загрузка свежих игр
-  bgFetch();
+  // Если после загрузки всего списка игр меньше 2 — сообщаем
+  if (pool.length < 2) {
+    const sub = document.getElementById('loading-sub');
+    if (sub) sub.textContent = 'Не удалось загрузить достаточно игр. Проверьте Pre-created.json';
+  }
 })();
 </script>
 </body>
