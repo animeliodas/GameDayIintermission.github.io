@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MEGA QIZ</title>
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #556270;
+      font-family: Arial, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* ── Root layout (fixed 1600×900 base, scaled) ── */
+    #root {
+      position: relative;
+      width: 1600px;
+      height: 900px;
+      transform-origin: top left;
+    }
+
+        /* ── Cards ── */
+    .card {
+      position: absolute;
+      width: 433px;
+      height: 633px;
+      top: 96px;
+      border-radius: 12px;
+      background: #4A5568;
+      cursor: pointer;
+      transition: filter 0.15s, background 0.3s;
+      user-select: none;
+      overflow: hidden;
+    }
+    .card:hover:not(.disabled) { filter: brightness(1.12); }
+    .card.correct { background: #2E7D32 !important; }
+    .card.wrong   { background: #C62828 !important; }
+    .card.draw    { background: #B07D00 !important; }
+    .card.disabled { pointer-events: none; cursor: default; }
+    .card.fade-in {
+      animation: fadeIn 0.35s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    #card1 { left: 152px; }
+    #card2 { left: 1008px; }
+
+    /* ── Card inner elements ── */
+    .card-title {
+      position: absolute;
+      left: 80px; top: 16px;
+      width: 273px; height: 50px;
+      color: #fff;
+      font-size: 18px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      line-height: 1.2;
+      pointer-events: none;
+    }
+    .card-cat {
+      position: absolute;
+      left: 80px; top: 72px;
+      width: 273px; height: 40px;
+      color: #cbd5e0;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      pointer-events: none;
+    }
+    .card-img {
+      position: absolute;
+      left: 80px; top: 118px;
+      width: 273px; height: 345px;
+      object-fit: contain;
+      background: #2d3748;
+      border-radius: 6px;
+      pointer-events: none;
+    }
+    .card-img-placeholder {
+      position: absolute;
+      left: 80px; top: 118px;
+      width: 273px; height: 345px;
+      background: #2d3748;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #718096;
+      font-size: 13px;
+      pointer-events: none;
+    }
+    .card-time {
+      position: absolute;
+      left: 80px; top: 472px;
+      width: 273px; height: 50px;
+      color: #00ff00;
+      font-size: 24px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    /* ── Middle panel ── */
+    #vs-text {
+      position: absolute;
+      left: 585px; top: 320px;
+      width: 430px; height: 60px;
+      font-size: 36px;
+      font-weight: 900;
+      color: #FA3E20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-style: italic;
+    }
+    #score-label {
+      position: absolute;
+      left: 680px; top: 400px;
+      width: 240px; height: 50px;
+      font-size: 30px;
+      font-weight: 900;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #score {
+      position: absolute;
+      left: 680px; top: 450px;
+      width: 240px; height: 90px;
+      font-size: 60px;
+      font-weight: 900;
+      color: #F0DDFE;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── Bottom hints ── */
+    .hint {
+      position: absolute;
+      height: 32px;
+      font-size: 18px;
+      font-style: italic;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      pointer-events: none;
+    }
+    #hint1 { left: 152px;  top: 746px; width: 433px; }
+    #hint2 { left: 1008px; top: 746px; width: 433px; }
+
+    /* ── Loading overlay ── */
+    #loading {
+      position: absolute;
+      inset: 0;
+      background: rgba(85,98,112,0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      border-radius: 8px;
+      z-index: 100;
+    }
+    #loading p {
+      color: #F0DDFE;
+      font-size: 28px;
+      font-weight: bold;
+      text-align: center;
+    }
+    #loading small {
+      color: #a0aec0;
+      font-size: 15px;
+      text-align: center;
+    }
+    .spinner {
+      width: 56px; height: 56px;
+      border: 6px solid #4A5568;
+      border-top-color: #FA3E20;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Error toast ── */
+    #toast {
+      position: fixed;
+      bottom: 24px; left: 50%;
+      transform: translateX(-50%);
+      background: #C62828;
+      color: #fff;
+      padding: 12px 28px;
+      border-radius: 8px;
+      font-size: 15px;
+      display: none;
+      z-index: 999;
+      max-width: 480px;
+      text-align: center;
+    }
+
+        /* ── Progress bar (subtle, top) ── */
+    #progress-bar {
+      position: absolute;
+      top: 0; left: 0;
+      height: 4px;
+      background: #FA3E20;
+      width: 0%;
+      transition: width 0.4s;
+      border-radius: 0 2px 2px 0;
+      z-index: 50;
+    }
+
+    /* ── Pool counter (bottom centre) ── */
+    #pool-counter {
+      position: absolute;
+      left: 585px; top: 820px;
+      width: 430px; height: 28px;
+      font-size: 13px;
+      color: #718096;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    /* ── Score animation ── */
+    @keyframes scorePop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.35); }
+      100% { transform: scale(1); }
+    }
+    .score-pop { animation: scorePop 0.3s ease; }
+  </style>
+</head>
+<body>
+
+<div id="root">
+
+  <!-- Progress -->
+  <div id="progress-bar"></div>
+
+  <!-- Loading overlay -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>Загрузка игр…</p>
+    <small id="loading-sub">Подключаемся к speedrun.com</small>
+  </div>
+
+  <!-- Card 1 -->
+  <div class="card" id="card1" onclick="cardClick(1)">
+    <div class="card-title"  id="gname1">Загрузка...</div>
+    <div class="card-cat"    id="kname1"></div>
+    <div class="card-img-placeholder" id="img1-placeholder">🎮</div>
+    <img class="card-img"   id="img1" alt="" style="display:none" />
+    <div class="card-time"  id="time1"></div>
+  </div>
+
+  <!-- Card 2 -->
+  <div class="card" id="card2" onclick="cardClick(2)">
+    <div class="card-title"  id="gname2">Загрузка...</div>
+    <div class="card-cat"    id="kname2"></div>
+    <div class="card-img-placeholder" id="img2-placeholder">🎮</div>
+    <img class="card-img"   id="img2" alt="" style="display:none" />
+    <div class="card-time"  id="time2">???</div>
+  </div>
+
+  <!-- Middle -->
+  <div id="vs-text">Кто быстрее?</div>
+  <div id="score-label">Счёт:</div>
+  <div id="score">0</div>
+
+    <!-- Hints -->
+  <div class="hint" id="hint1">Время знаем</div>
+  <div class="hint" id="hint2">Угадай время!</div>
+
+  <!-- Pool counter -->
+  <div id="pool-counter"></div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   CONFIG
+═══════════════════════════════════════════════════════════════ */
+const API_BASE    = 'https://www.speedrun.com/api/v1';
+const CORS_PROXY  = 'https://corsproxy.io/?url=';   // публичный CORS-прокси
+const POOL_TARGET = 30;   // сколько уникальных игр набрать
+const SWAP_DELAY  = 2000; // мс до следующей пары
+
+/* ═══════════════════════════════════════════════════════════════
+   STATE
+═══════════════════════════════════════════════════════════════ */
+let pool        = [];          // массив TGameRecord-подобных объектов
+let seenSlugs   = new Set();
+let gameStarted = false;
+let waitSwap    = false;
+let score       = 0;
+let idx1 = -1, idx2 = -1;
+let queue = [], queuePos = 0;
+let swapTimer = null;
+let fetching  = false;
+
+/* ═══════════════════════════════════════════════════════════════
+   SCALING (как ScaleLayout в Delphi)
+═══════════════════════════════════════════════════════════════ */
+function scaleLayout() {
+  const root = document.getElementById('root');
+  const sx   = window.innerWidth  / 1600;
+  const sy   = window.innerHeight / 900;
+  const s    = Math.min(sx, sy);
+  const nw   = 1600 * s;
+  const nh   = 900  * s;
+  root.style.transform  = `scale(${s})`;
+  root.style.left       = ((window.innerWidth  - nw) / 2) + 'px';
+  root.style.top        = ((window.innerHeight - nh) / 2) + 'px';
+  root.style.position   = 'absolute';
+}
+window.addEventListener('resize', scaleLayout);
+scaleLayout();
+
+/* ═══════════════════════════════════════════════════════════════
+   UTILITIES
+═══════════════════════════════════════════════════════════════ */
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ISO 8601 duration "PT1H2M3.456S" → seconds (float)
+function isoToSec(iso) {
+  if (!iso || !iso.startsWith('PT')) return 0;
+  let s = iso.slice(2), h = 0, m = 0, sec = 0;
+  const hm = s.match(/(\d+)H/); if (hm) { h   = +hm[1]; }
+  const mm = s.match(/(\d+)M/); if (mm) { m   = +mm[1]; }
+  const sm = s.match(/([\d.]+)S/); if (sm) { sec = +sm[1]; }
+  return h * 3600 + m * 60 + sec;
+}
+
+// ISO 8601 duration → display string "Xч Xм Xс [Xмс]"
+function isoToDisplay(iso) {
+  const total = isoToSec(iso);
+  const h   = Math.floor(total / 3600);
+  const m   = Math.floor((total % 3600) / 60);
+  const s   = Math.floor(total % 60);
+  const ms  = Math.round((total % 1) * 1000);
+  let r = '';
+  if (h > 0) r += h + 'ч ';
+  if (m > 0 || h > 0) r += m + 'м ';
+  r += s + 'с';
+  if (ms > 0) r += ' ' + ms + 'мс';
+  return r.trim();
+}
+
+function showToast(msg, dur = 3500) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => { t.style.display = 'none'; }, dur);
+}
+
+function setProgress(pct) {
+  document.getElementById('progress-bar').style.width = pct + '%';
+}
+
+function updatePoolCounter() {
+  const el = document.getElementById('pool-counter');
+  if (!el) return;
+  if (pool.length >= POOL_TARGET) {
+    el.textContent = `✓ Загружено ${pool.length} игр`;
+  } else {
+    el.textContent = `⏳ Загружено игр: ${pool.length} / ${POOL_TARGET}`;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   API  (с повторами и задержкой при 429)
+═══════════════════════════════════════════════════════════════ */
+// Кешируем успешный метод (direct / proxy) чтобы не пробовать лишний раз
+let _apiMethod = 'direct'; // 'direct' | 'proxy'
+
+async function apiGet(url, maxRetry = 3) {
+  let delay = 400;
+  for (let i = 0; i <= maxRetry; i++) {
+    try {
+      let res;
+      if (_apiMethod === 'direct') {
+        try {
+          res = await fetch(url);
+        } catch (_) {
+          _apiMethod = 'proxy';
+          res = await fetch(CORS_PROXY + encodeURIComponent(url));
+        }
+      } else {
+        res = await fetch(CORS_PROXY + encodeURIComponent(url));
+      }
+      if (res.status === 200) return res.json();
+      if (res.status === 429) {
+        console.warn('Rate limited — waiting 12s...');
+        await sleep(12000);
+        continue;
+      }
+    } catch (_) {}
+    if (i < maxRetry) await sleep(delay);
+    delay = Math.min(delay * 2, 8000);
+  }
+  return null;
+}
+
+async function imageExists(url) {
+  if (!url) return false;
+  // Проверяем загрузкой через Image — работает без CORS-ограничений для изображений
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload  = () => resolve(true);
+    img.onerror = () => resolve(false);
+    img.src = url;
+  });
+}
+
+function buildCoverURL(apiId) {
+  return `https://www.speedrun.com/static/game/${apiId}/cover?v=1`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FETCH RANDOM GAME SLUG  (без Edge — через API)
+   Speedrun.com не имеет публичного /randomgame в API,
+   поэтому берём случайный offset из /games
+═══════════════════════════════════════════════════════════════ */
+let _totalGames = 0;
+
+async function fetchRandomSlug() {
+  // Первый раз — узнаём приблизительное кол-во игр
+  if (_totalGames === 0) {
+    const j = await apiGet(`${API_BASE}/games?max=1`);
+    if (j && j.pagination) _totalGames = j.pagination.size || 50000;
+    else _totalGames = 50000;
+  }
+  const offset = Math.floor(Math.random() * Math.min(_totalGames - 1, 49999));
+  const j = await apiGet(`${API_BASE}/games?max=1&offset=${offset}`);
+  if (!j || !j.data || j.data.length === 0) return null;
+  return j.data[0].abbreviation || j.data[0].id;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FETCH ONE GAME  →  record { id, gameName, catName, wrTime, wrTimeSec, image }
+═══════════════════════════════════════════════════════════════ */
+async function fetchOneBySlug(slug) {
+  // 1. Game info
+  let data = null;
+  let j = await apiGet(`${API_BASE}/games/${slug}`);
+  if (j && j.data) data = j.data;
+  else {
+    const j2 = await apiGet(`${API_BASE}/games?abbreviation=${slug}&max=1`);
+    if (j2 && j2.data && j2.data.length > 0) data = j2.data[0];
+  }
+  if (!data) return null;
+
+  const apiId    = data.id;
+  const gameName = (data.names && data.names.international) || data.id;
+  let   coverURL = (data.assets && data.assets['cover-large'] && data.assets['cover-large'].uri)
+                || (data.assets && data.assets['cover-medium'] && data.assets['cover-medium'].uri)
+                || buildCoverURL(apiId);
+
+  // 2. Category + cover (параллельно)
+  const [catResult, coverOK] = await Promise.all([
+    (async () => {
+      const jc = await apiGet(`${API_BASE}/games/${apiId}/categories?miscellaneous=no`);
+      if (!jc || !jc.data) return null;
+      for (const cat of jc.data) {
+        if (cat.type === 'per-game') return { id: cat.id, name: cat.name };
+      }
+      return null;
+    })(),
+    (async () => {
+      let ok = await imageExists(coverURL);
+      if (!ok) {
+        const fb = buildCoverURL(apiId);
+        if (fb !== coverURL) { ok = await imageExists(fb); if (ok) coverURL = fb; }
+      }
+      return ok;
+    })()
+  ]);
+
+  if (!coverOK) return null;
+  if (!catResult) return null;
+
+  // 3. World record
+  const jl = await apiGet(
+    `${API_BASE}/leaderboards/${apiId}/category/${catResult.id}?top=1`
+  );
+  if (!jl || !jl.data || !jl.data.runs || jl.data.runs.length === 0) return null;
+  const primary = jl.data.runs[0].run.times.primary;
+  if (!primary) return null;
+
+  return {
+    id:        slug,
+    gameName:  gameName,
+    catName:   catResult.name,
+    wrTime:    primary,          // ISO 8601 duration
+    wrTimeSec: isoToSec(primary),
+    image:     coverURL
+  };
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PRE-CREATED  (Pre-created.json рядом с index.html)
+═══════════════════════════════════════════════════════════════ */
+async function loadPreCreated() {
+  try {
+    const res = await fetch('./Pre-created.json');
+    if (!res.ok) return;
+    const json = await res.json();
+    const games = json.games || [];
+    const records = [];
+    for (const g of games) {
+      if (!g.id || !g.GameName || !g.WRTime || !g.Image) continue;
+      records.push({
+        id:        g.id,
+        gameName:  g.GameName,
+        catName:   g.CatName  || '',
+        wrTime:    g.WRTime,
+        wrTimeSec: parseStoredTime(g.WRTime),
+        image:     g.Image
+      });
+    }
+    shuffle(records);
+    for (const r of records) {
+      if (!seenSlugs.has(r.id)) {
+        seenSlugs.add(r.id);
+        addToPool(r);
+      }
+    }
+  } catch (_) {}
+}
+
+// WRTime в Pre-created хранится в формате "M:SS" / "H:MM:SS" / "PTxxx"
+function parseStoredTime(t) {
+  if (!t) return 0;
+  if (t.startsWith('PT')) return isoToSec(t);
+  // "H:MM:SS" или "M:SS"
+  const parts = t.split(':');
+  if (parts.length === 3)
+    return +parts[0] * 3600 + +parts[1] * 60 + parseFloat(parts[2]);
+  if (parts.length === 2)
+    return +parts[0] * 60 + parseFloat(parts[1]);
+  return 0;
+}
+
+// Форматирование для хранимого (не ISO) формата
+function formatStoredTime(t) {
+  if (!t) return '';
+  if (t.startsWith('PT')) return isoToDisplay(t);
+  // уже в читаемом виде — разберём как parseStoredTime
+  const sec = parseStoredTime(t);
+  const h  = Math.floor(sec / 3600);
+  const m  = Math.floor((sec % 3600) / 60);
+  const s  = Math.floor(sec % 60);
+  const ms = Math.round((sec % 1) * 1000);
+  let r = '';
+  if (h > 0) r += h + 'ч ';
+  if (m > 0 || h > 0) r += m + 'м ';
+  r += s + 'с';
+  if (ms > 0) r += ' ' + ms + 'мс';
+  return r.trim();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   POOL MANAGEMENT
+═══════════════════════════════════════════════════════════════ */
+function addToPool(rec) {
+  pool.push(rec);
+  setProgress(Math.min(100, pool.length / POOL_TARGET * 100));
+  updateLoadingText();
+  updatePoolCounter();
+  tryStartGame();
+}
+
+function updateLoadingText() {
+  const sub = document.getElementById('loading-sub');
+  if (sub) sub.textContent = `Загружено игр: ${pool.length} / ${POOL_TARGET}`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   QUEUE  (Fisher-Yates shuffle, переход без повторов)
+═══════════════════════════════════════════════════════════════ */
+function rebuildQueue() {
+  queue = pool.map((_, i) => i);
+  shuffle(queue);
+  queuePos = 0;
+}
+
+function nextIndex(excludeIdx) {
+  if (pool.length <= 1) return 0;
+  let tries = 0;
+  while (true) {
+    if (queuePos >= queue.length) rebuildQueue();
+    const r = queue[queuePos++];
+    if (r !== excludeIdx) return r;
+    if (++tries > pool.length * 2) {
+      // fallback
+      let r2;
+      do { r2 = Math.floor(Math.random() * pool.length); } while (r2 === excludeIdx);
+      return r2;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GAME LOGIC
+═══════════════════════════════════════════════════════════════ */
+function tryStartGame() {
+  if (gameStarted) {
+    // обновляем очередь при пополнении пула
+    rebuildQueue();
+    return;
+  }
+  if (pool.length < 2) return;
+
+  gameStarted = true;
+  document.getElementById('loading').style.display = 'none';
+
+    rebuildQueue();
+  idx1 = nextIndex(-1);
+  idx2 = nextIndex(idx1);
+
+  showCard(idx1, 1, true);
+  showCard(idx2, 2, true);
+  document.getElementById('time2').textContent = '???';
+
+  setCardsEnabled(true);
+}
+
+function displayTime(rec) {
+  return rec.wrTime.startsWith('PT')
+    ? isoToDisplay(rec.wrTime)
+    : formatStoredTime(rec.wrTime);
+}
+
+function showCard(index, position, animate = false) {
+  const rec = pool[index];
+  if (!rec) return;
+
+  const card  = document.getElementById(`card${position}`);
+  const gname = document.getElementById(`gname${position}`);
+  const kname = document.getElementById(`kname${position}`);
+  const timEl = document.getElementById(`time${position}`);
+  const img   = document.getElementById(`img${position}`);
+  const ph    = document.getElementById(`img${position}-placeholder`);
+
+  gname.textContent = rec.gameName;
+  kname.textContent = rec.catName;
+  timEl.textContent = displayTime(rec);
+
+  // Анимация появления карточки
+  if (animate) {
+    card.classList.remove('fade-in');
+    void card.offsetWidth; // reflow
+    card.classList.add('fade-in');
+  }
+
+  // Сброс изображения
+  img.style.display = 'none';
+  ph.style.display  = 'flex';
+  img.src = '';
+
+  const targetSrc = rec.image;
+  const imgEl     = img;
+  const phEl      = ph;
+
+  const tryLoad = (url) => new Promise((resolve) => {
+    const i = new Image();
+    i.onload  = () => {
+      imgEl.src = url;
+      imgEl.style.display = 'block';
+      phEl.style.display  = 'none';
+      resolve(true);
+    };
+    i.onerror = () => resolve(false);
+    i.src = url;
+  });
+
+  (async () => {
+    if (await tryLoad(targetSrc)) return;
+    await tryLoad(CORS_PROXY + encodeURIComponent(targetSrc));
+  })();
+}
+
+function animateScore() {
+  const el = document.getElementById('score');
+  el.classList.remove('score-pop');
+  void el.offsetWidth;
+  el.classList.add('score-pop');
+  el.addEventListener('animationend', () => el.classList.remove('score-pop'), { once: true });
+}
+
+function cardClick(choice) {
+  if (waitSwap || !gameStarted) return;
+
+  // Открываем скрытое время карточки 2
+  const t2El = document.getElementById('time2');
+  t2El.textContent = displayTime(pool[idx2]);
+
+  const sec1 = pool[idx1].wrTimeSec;
+  const sec2 = pool[idx2].wrTimeSec;
+
+  const card1 = document.getElementById('card1');
+  const card2 = document.getElementById('card2');
+  card1.classList.remove('correct', 'wrong', 'draw');
+  card2.classList.remove('correct', 'wrong', 'draw');
+
+  let isCorrect = false;
+
+  if (Math.abs(sec1 - sec2) < 0.001) {
+    // Ничья — оба жёлтые, счёт не меняется
+    card1.classList.add('draw');
+    card2.classList.add('draw');
+  } else {
+    isCorrect = choice === 1 ? sec1 < sec2 : sec2 < sec1;
+    if (isCorrect) {
+      document.getElementById(`card${choice}`).classList.add('correct');
+      score++;
+    } else {
+      document.getElementById(`card${choice}`).classList.add('wrong');
+      score--;
+    }
+    document.getElementById('score').textContent = score;
+    animateScore();
+  }
+
+  // Сдвиг: card2 становится card1
+  idx1 = idx2;
+  idx2 = nextIndex(idx1);
+
+  waitSwap = true;
+  setCardsEnabled(false);
+
+  swapTimer = setTimeout(() => {
+    card1.classList.remove('correct', 'wrong', 'draw');
+    card2.classList.remove('correct', 'wrong', 'draw');
+
+    showCard(idx1, 1, false);
+    showCard(idx2, 2, true);   // анимируем только новую карточку
+    document.getElementById('time2').textContent = '???';
+
+    waitSwap = false;
+    setCardsEnabled(true);
+  }, SWAP_DELAY);
+}
+
+function setCardsEnabled(en) {
+  const c1 = document.getElementById('card1');
+  const c2 = document.getElementById('card2');
+  if (en) {
+    c1.classList.remove('disabled');
+    c2.classList.remove('disabled');
+  } else {
+    c1.classList.add('disabled');
+    c2.classList.add('disabled');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BACKGROUND FETCHER  (аналог LoadDataAsync)
+═══════════════════════════════════════════════════════════════ */
+async function bgFetch() {
+  if (fetching) return;
+  fetching = true;
+
+  while (pool.length < POOL_TARGET) {
+    try {
+      const slug = await fetchRandomSlug();
+      if (!slug || seenSlugs.has(slug)) { await sleep(100); continue; }
+      seenSlugs.add(slug);
+
+      const rec = await fetchOneBySlug(slug);
+      if (!rec) { await sleep(150); continue; }
+
+      addToPool(rec);
+      await sleep(100);
+    } catch (e) {
+      await sleep(500);
+    }
+  }
+  fetching = false;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INIT
+═══════════════════════════════════════════════════════════════ */
+(async () => {
+  // Сначала Pre-created (быстрый старт)
+  await loadPreCreated();
+  // Затем фоновая загрузка свежих игр
+  bgFetch();
+})();
+</script>
+</body>
+</html>

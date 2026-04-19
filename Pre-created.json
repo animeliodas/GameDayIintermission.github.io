@@ -1,0 +1,74 @@
+﻿{
+    "games": [
+        {
+            "id": "the_sims_life_stories",
+            "GameName": "The Sims Life Stories",
+            "CatName": "Riley Harlow",
+            "WRTime": "1:06:16",
+            "Image": "https:\/\/www.speedrun.com\/static\/game\/m1zjm506\/cover?v=75fbc0b"
+        },
+        {
+            "id": "shining_soul_ii",
+            "GameName": "Shining Soul II",
+            "CatName": "Any%",
+            "WRTime": "55:12",
+            "Image": "https:\/\/www.speedrun.com\/static\/game\/pdvqj96w\/cover?v=29c01a6"
+        },
+        {
+            "id": "dragon_unit",
+            "GameName": "Dragon Unit",
+            "CatName": "Any%",
+            "WRTime": "2:35",
+            "Image": "https:\/\/www.speedrun.com\/static\/game\/j1n8q391\/cover?v=b0146e9"
+        },
+        {
+            "id": "Sisters_Royale",
+            "GameName": "Sisters Royale",
+            "CatName": "Easy",
+            "WRTime": "12:31",
+            "Image": "https:\/\/www.speedrun.com\/static\/game\/369wp5ld\/cover?v=400b833"
+        },
+        {
+            "id": "dyna_boy",
+            "GameName": "Dyna Boy",
+            "CatName": "Any%",
+            "WRTime": "10:59",
+            "Image": "https:\/\/www.speedrun.com\/static\/game\/lde3mmj6\/cover?v=e385d10"
+        },
+        {
+            "id": "detective_pikachu_returns",
+            "GameName": "Detective Pikachu Returns",
+            "CatName": "Any%",
+            "WRTime": "2:19:37",
+            "Image": "https:\/\/www.speedrun.com\/static\/game\/76r44e51\/cover?v=b3b71eb"
+        },
+        {
+            "id": "blokdropu",
+            "GameName": "BLOK DROP U",
+            "CatName": "All Levels",
+            "WRTime": "16:23",
+            "Image": "https:\/\/www.speedrun.com\/static\/game\/4d7943g1\/cover?v=f281a21"
+        },
+        {
+            "id": "Owl_Observatory",
+            "GameName": "Owl Observatory",
+            "CatName": "Αny% (Demo)",
+            "WRTime": "1:15.350",
+            "Image": "https:\/\/www.speedrun.com\/static\/game\/369w9v3d\/cover?v=a6e032d"
+        },
+        {
+            "id": "evn",
+            "GameName": "Escape Velocity Nova",
+            "CatName": "Any % (Vell-os)",
+            "WRTime": "14:22",
+            "Image": "https:\/\/www.speedrun.com\/static\/game\/9dowzmk1\/cover?v=910d616"
+        },
+        {
+            "id": "jazzpunk",
+            "GameName": "Jazzpunk",
+            "CatName": "Any%",
+            "WRTime": "13:28.320",
+            "Image": "https:\/\/www.speedrun.com\/static\/game\/268wlo6p\/cover?v=e44933e"
+        }
+    ]
+}
