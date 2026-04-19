@@ -3,304 +3,458 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MEGA QIZ</title>
+  <title>MEGA QIZ — Speedrun Edition</title>
   <style>
     /* ── Reset & Base ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+    :root {
+      --bg:         #1a1f2e;
+      --bg2:        #232938;
+      --card-bg:    #2a3147;
+      --card-hover: #323c58;
+      --accent:     #fa3e20;
+      --accent2:    #ff6b47;
+      --green:      #00e676;
+      --red:        #ff1744;
+      --gold:       #ffd600;
+      --text:       #e8eaf6;
+      --text-dim:   #8892b0;
+      --radius:     18px;
+      --shadow:     0 8px 32px rgba(0,0,0,0.45);
+      --shadow-hover: 0 16px 48px rgba(250,62,32,0.35);
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
     body {
-      background: #556270;
-      font-family: Arial, sans-serif;
       min-height: 100vh;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
+      flex-direction: column;
     }
 
-    /* ── Root layout (fixed 1600×900 base, scaled) ── */
-    #root {
-      position: relative;
-      width: 1600px;
-      height: 900px;
-      transform-origin: top left;
+    /* ── Progress bar ── */
+    #progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      width: 0%;
+      transition: width 0.5s ease;
+      z-index: 200;
+      border-radius: 0 2px 2px 0;
     }
 
-        /* ── Cards ── */
-    .card {
-      position: absolute;
-      width: 433px;
-      height: 633px;
-      top: 96px;
-      border-radius: 12px;
-      background: #4A5568;
-      cursor: pointer;
-      transition: filter 0.15s, background 0.3s;
-      user-select: none;
-      overflow: hidden;
-    }
-    .card:hover:not(.disabled) { filter: brightness(1.12); }
-    .card.correct { background: #2E7D32 !important; }
-    .card.wrong   { background: #C62828 !important; }
-    .card.draw    { background: #B07D00 !important; }
-    .card.disabled { pointer-events: none; cursor: default; }
-    .card.fade-in {
-      animation: fadeIn 0.35s ease;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    #card1 { left: 152px; }
-    #card2 { left: 1008px; }
-
-    /* ── Card inner elements ── */
-    .card-title {
-      position: absolute;
-      left: 80px; top: 16px;
-      width: 273px; height: 50px;
-      color: #fff;
-      font-size: 18px;
-      font-weight: bold;
+    /* ── Header ── */
+    header {
+      padding: 18px 32px 0;
       display: flex;
       align-items: center;
-      justify-content: center;
-      text-align: center;
-      line-height: 1.2;
-      pointer-events: none;
+      justify-content: space-between;
+      flex-shrink: 0;
     }
-    .card-cat {
-      position: absolute;
-      left: 80px; top: 72px;
-      width: 273px; height: 40px;
-      color: #cbd5e0;
+    .logo {
+      font-size: clamp(20px, 3vw, 28px);
+      font-weight: 900;
+      letter-spacing: 2px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .logo span {
+      -webkit-text-fill-color: var(--text);
+    }
+
+    /* ── Score panel ── */
+    .score-panel {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg2);
+      padding: 8px 20px;
+      border-radius: 50px;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+    .score-label {
       font-size: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      pointer-events: none;
-    }
-    .card-img {
-      position: absolute;
-      left: 80px; top: 118px;
-      width: 273px; height: 345px;
-      object-fit: contain;
-      background: #2d3748;
-      border-radius: 6px;
-      pointer-events: none;
-    }
-    .card-img-placeholder {
-      position: absolute;
-      left: 80px; top: 118px;
-      width: 273px; height: 345px;
-      background: #2d3748;
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #718096;
-      font-size: 13px;
-      pointer-events: none;
-    }
-    .card-time {
-      position: absolute;
-      left: 80px; top: 472px;
-      width: 273px; height: 50px;
-      color: #00ff00;
-      font-size: 24px;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      pointer-events: none;
-    }
-
-    /* ── Middle panel ── */
-    #vs-text {
-      position: absolute;
-      left: 585px; top: 320px;
-      width: 430px; height: 60px;
-      font-size: 36px;
-      font-weight: 900;
-      color: #FA3E20;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      font-style: italic;
-    }
-    #score-label {
-      position: absolute;
-      left: 680px; top: 400px;
-      width: 240px; height: 50px;
-      font-size: 30px;
-      font-weight: 900;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      color: var(--text-dim);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
     #score {
-      position: absolute;
-      left: 680px; top: 450px;
-      width: 240px; height: 90px;
-      font-size: 60px;
+      font-size: clamp(22px, 3vw, 30px);
       font-weight: 900;
-      color: #F0DDFE;
+      color: var(--text);
+      min-width: 40px;
+      text-align: center;
+      transition: color 0.3s;
+    }
+    #score.positive { color: var(--green); }
+    #score.negative { color: var(--red); }
+
+    /* ── Pool counter ── */
+    #pool-counter {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-dim);
+      padding: 6px 0 0;
+      flex-shrink: 0;
+    }
+
+    /* ── Main arena ── */
+    .arena {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(16px, 3vw, 48px);
+      padding: clamp(12px, 2vw, 24px) clamp(12px, 3vw, 48px);
+      min-height: 0;
+    }
+
+    /* ── VS divider ── */
+    .vs-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+    .vs-badge {
+      font-size: clamp(28px, 4vw, 48px);
+      font-weight: 900;
+      font-style: italic;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: none;
+      filter: drop-shadow(0 0 12px rgba(250,62,32,0.5));
+    }
+    .vs-hint {
+      font-size: clamp(11px, 1.2vw, 13px);
+      color: var(--text-dim);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    /* ── Cards ── */
+    .card {
+      flex: 1;
+      max-width: 420px;
+      min-width: 0;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      user-select: none;
+      border: 2px solid transparent;
+      transition:
+        transform      0.2s cubic-bezier(.34,1.56,.64,1),
+        box-shadow     0.2s ease,
+        border-color   0.25s ease,
+        background     0.3s ease;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
+    }
+    .card:hover:not(.disabled) {
+      transform: translateY(-6px) scale(1.015);
+      box-shadow: var(--shadow-hover);
+      border-color: rgba(250,62,32,0.4);
+      background: var(--card-hover);
+    }
+    .card:active:not(.disabled) {
+      transform: translateY(-2px) scale(1.005);
+    }
+    .card.disabled {
+      pointer-events: none;
+      cursor: default;
+    }
+    .card.correct {
+      background: #1b4d2e !important;
+      border-color: var(--green) !important;
+      box-shadow: 0 8px 32px rgba(0,230,118,0.3) !important;
+    }
+    .card.wrong {
+      background: #4d1b1b !important;
+      border-color: var(--red) !important;
+      box-shadow: 0 8px 32px rgba(255,23,68,0.3) !important;
+    }
+    .card.draw {
+      background: #4d3c00 !important;
+      border-color: var(--gold) !important;
+      box-shadow: 0 8px 32px rgba(255,214,0,0.3) !important;
+    }
+
+    /* Ripple эффект при клике */
+    .card .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      transform: scale(0);
+      animation: ripple 0.55s ease-out forwards;
+      pointer-events: none;
+    }
+    @keyframes ripple {
+      to { transform: scale(4); opacity: 0; }
+    }
+
+    /* Fade-in анимация карточки */
+    .card.fade-in {
+      animation: cardIn 0.4s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(20px) scale(0.95); }
+      to   { opacity: 1; transform: translateY(0)   scale(1); }
+    }
+
+    /* ── Card внутренности ── */
+    .card-inner {
+      padding: clamp(14px, 2vw, 22px);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      gap: 10px;
+    }
+
+    .card-title {
+      font-size: clamp(14px, 1.6vw, 18px);
+      font-weight: 700;
+      color: var(--text);
+      text-align: center;
+      line-height: 1.3;
+      min-height: 2.6em;
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
-    /* ── Bottom hints ── */
-    .hint {
-      position: absolute;
-      height: 32px;
-      font-size: 18px;
-      font-style: italic;
-      color: #fff;
+    .card-cat {
+      font-size: clamp(11px, 1.1vw, 13px);
+      color: var(--text-dim);
+      text-align: center;
+      min-height: 1.4em;
+    }
+
+    .card-img-wrap {
+      flex: 1;
+      min-height: 0;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #1a1f2e;
       display: flex;
       align-items: center;
       justify-content: center;
-      text-align: center;
-      pointer-events: none;
+      position: relative;
     }
-    #hint1 { left: 152px;  top: 746px; width: 433px; }
-    #hint2 { left: 1008px; top: 746px; width: 433px; }
+    .card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: none;
+    }
+    .card-img.loaded { display: block; }
+    .img-placeholder {
+      font-size: 48px;
+      opacity: 0.3;
+    }
+
+    /* ── Время ── */
+    .card-time-wrap {
+      text-align: center;
+      padding: 8px 0 4px;
+    }
+    .card-time {
+      font-size: clamp(18px, 2.2vw, 26px);
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.5px;
+      display: inline-block;
+    }
+    /* Анимация появления времени */
+    .card-time.reveal {
+      animation: timeReveal 0.45s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes timeReveal {
+      from { opacity: 0; transform: scale(0.6) translateY(8px); filter: blur(4px); }
+      to   { opacity: 1; transform: scale(1)   translateY(0);   filter: blur(0); }
+    }
+    .card-time.known  { color: var(--green); }
+    .card-time.hidden { color: #718096; letter-spacing: 4px; font-size: clamp(22px, 2.8vw, 32px); }
+
+    .card-hint {
+      font-size: clamp(10px, 1vw, 12px);
+      color: var(--text-dim);
+      text-align: center;
+      font-style: italic;
+      padding-bottom: 4px;
+    }
 
     /* ── Loading overlay ── */
     #loading {
-      position: absolute;
+      position: fixed;
       inset: 0;
-      background: rgba(85,98,112,0.92);
+      background: rgba(26,31,46,0.96);
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       gap: 20px;
-      border-radius: 8px;
-      z-index: 100;
+      z-index: 150;
+      backdrop-filter: blur(6px);
     }
-    #loading p {
-      color: #F0DDFE;
-      font-size: 28px;
-      font-weight: bold;
-      text-align: center;
+    #loading h2 {
+      font-size: clamp(20px, 3vw, 28px);
+      font-weight: 800;
+      color: var(--text);
     }
-    #loading small {
-      color: #a0aec0;
-      font-size: 15px;
+    #loading-sub {
+      font-size: 14px;
+      color: var(--text-dim);
       text-align: center;
+      max-width: 320px;
     }
     .spinner {
-      width: 56px; height: 56px;
-      border: 6px solid #4A5568;
-      border-top-color: #FA3E20;
+      width: 52px; height: 52px;
+      border: 5px solid rgba(255,255,255,0.08);
+      border-top-color: var(--accent);
       border-radius: 50%;
-      animation: spin 0.9s linear infinite;
+      animation: spin 0.85s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Error toast ── */
+    /* ── Toast ── */
     #toast {
       position: fixed;
       bottom: 24px; left: 50%;
-      transform: translateX(-50%);
-      background: #C62828;
+      transform: translateX(-50%) translateY(12px);
+      background: #c62828;
       color: #fff;
       padding: 12px 28px;
-      border-radius: 8px;
-      font-size: 15px;
+      border-radius: 50px;
+      font-size: 14px;
       display: none;
+      opacity: 0;
       z-index: 999;
-      max-width: 480px;
+      max-width: 90vw;
       text-align: center;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    #toast.show {
+      display: block;
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
     }
 
-        /* ── Progress bar (subtle, top) ── */
-    #progress-bar {
-      position: absolute;
-      top: 0; left: 0;
-      height: 4px;
-      background: #FA3E20;
-      width: 0%;
-      transition: width 0.4s;
-      border-radius: 0 2px 2px 0;
-      z-index: 50;
-    }
-
-    /* ── Pool counter (bottom centre) ── */
-    #pool-counter {
-      position: absolute;
-      left: 585px; top: 820px;
-      width: 430px; height: 28px;
-      font-size: 13px;
-      color: #718096;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: none;
-    }
-
-    /* ── Score animation ── */
+    /* ── Score pop ── */
     @keyframes scorePop {
       0%   { transform: scale(1); }
-      40%  { transform: scale(1.35); }
+      45%  { transform: scale(1.4); }
       100% { transform: scale(1); }
     }
-    .score-pop { animation: scorePop 0.3s ease; }
+    .score-pop { animation: scorePop 0.35s cubic-bezier(.34,1.56,.64,1); }
+
+    /* ── Mobile: вертикальная раскладка ── */
+    @media (max-width: 700px) or (orientation: portrait) {
+      header { padding: 12px 16px 0; }
+      .arena {
+        flex-direction: column;
+        gap: 12px;
+        padding: 10px 12px;
+        align-items: stretch;
+      }
+      .card { max-width: 100%; }
+      .vs-col { flex-direction: row; justify-content: center; gap: 24px; }
+      .vs-badge { font-size: clamp(24px, 6vw, 36px); }
+      .vs-hint { display: none; }
+      .card-img-wrap { min-height: 180px; max-height: 220px; }
+    }
+
+    @media (max-width: 400px) {
+      .score-panel { padding: 6px 14px; }
+      .logo { font-size: 18px; }
+    }
   </style>
 </head>
 <body>
 
-<div id="root">
+<!-- Progress -->
+<div id="progress-bar"></div>
 
-  <!-- Progress -->
-  <div id="progress-bar"></div>
+<!-- Loading overlay -->
+<div id="loading">
+  <div class="spinner"></div>
+  <h2>Загрузка игр…</h2>
+  <div id="loading-sub">Подключаемся к speedrun.com</div>
+</div>
 
-  <!-- Loading overlay -->
-  <div id="loading">
-    <div class="spinner"></div>
-    <p>Загрузка игр…</p>
-    <small id="loading-sub">Подключаемся к speedrun.com</small>
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Header -->
+<header>
+  <div class="logo">MEGA <span>QIZ</span></div>
+  <div class="score-panel">
+    <span class="score-label">Счёт</span>
+    <div id="score">0</div>
   </div>
+</header>
+
+<!-- Pool counter -->
+<div id="pool-counter"></div>
+
+<!-- Arena -->
+<div class="arena">
 
   <!-- Card 1 -->
-  <div class="card" id="card1" onclick="cardClick(1)">
-    <div class="card-title"  id="gname1">Загрузка...</div>
-    <div class="card-cat"    id="kname1"></div>
-    <div class="card-img-placeholder" id="img1-placeholder">🎮</div>
-    <img class="card-img"   id="img1" alt="" style="display:none" />
-    <div class="card-time"  id="time1"></div>
+  <div class="card" id="card1" onclick="cardClick(1, event)">
+    <div class="card-inner">
+      <div class="card-title"  id="gname1">…</div>
+      <div class="card-cat"    id="kname1"></div>
+      <div class="card-img-wrap">
+        <span class="img-placeholder" id="img1-placeholder">🎮</span>
+        <img class="card-img" id="img1" alt="" />
+      </div>
+      <div class="card-time-wrap">
+        <div class="card-time known" id="time1"></div>
+      </div>
+      <div class="card-hint">Время знаем ↑</div>
+    </div>
+  </div>
+
+  <!-- VS -->
+  <div class="vs-col">
+    <div class="vs-badge">VS</div>
+    <div class="vs-hint">Нажми на карточку<br>с более быстрым рекордом</div>
   </div>
 
   <!-- Card 2 -->
-  <div class="card" id="card2" onclick="cardClick(2)">
-    <div class="card-title"  id="gname2">Загрузка...</div>
-    <div class="card-cat"    id="kname2"></div>
-    <div class="card-img-placeholder" id="img2-placeholder">🎮</div>
-    <img class="card-img"   id="img2" alt="" style="display:none" />
-    <div class="card-time"  id="time2">???</div>
+  <div class="card" id="card2" onclick="cardClick(2, event)">
+    <div class="card-inner">
+      <div class="card-title"  id="gname2">…</div>
+      <div class="card-cat"    id="kname2"></div>
+      <div class="card-img-wrap">
+        <span class="img-placeholder" id="img2-placeholder">🎮</span>
+        <img class="card-img" id="img2" alt="" />
+      </div>
+      <div class="card-time-wrap">
+        <div class="card-time hidden" id="time2">???</div>
+      </div>
+      <div class="card-hint">Угадай время ↑</div>
+    </div>
   </div>
 
-  <!-- Middle -->
-  <div id="vs-text">Кто быстрее?</div>
-  <div id="score-label">Счёт:</div>
-  <div id="score">0</div>
-
-    <!-- Hints -->
-  <div class="hint" id="hint1">Время знаем</div>
-  <div class="hint" id="hint2">Угадай время!</div>
-
-  <!-- Pool counter -->
-  <div id="pool-counter"></div>
-
 </div>
-
-<div id="toast"></div>
 
 <script>
 /* ═══════════════════════════════════════════════════════════════
@@ -381,8 +535,8 @@ function isoToDisplay(iso) {
 function showToast(msg, dur = 3500) {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.style.display = 'block';
-  setTimeout(() => { t.style.display = 'none'; }, dur);
+  t.classList.add('show');
+  setTimeout(() => { t.classList.remove('show'); }, dur);
 }
 
 function setProgress(pct) {
@@ -614,13 +768,25 @@ function tryStartGame() {
 
   showCard(idx1, 1, true);
   showCard(idx2, 2, true);
-  document.getElementById('time2').textContent = '???';
 
   setCardsEnabled(true);
 }
 
 function displayTime(rec) {
   return isoToDisplay(rec.wrTime);
+}
+
+// Ripple эффект при клике
+function spawnRipple(card, event) {
+  const rect   = card.getBoundingClientRect();
+  const size   = Math.max(rect.width, rect.height);
+  const x      = (event.clientX - rect.left) - size / 2;
+  const y      = (event.clientY - rect.top)  - size / 2;
+  const ripple = document.createElement('span');
+  ripple.className = 'ripple';
+  ripple.style.cssText = `width:${size}px;height:${size}px;left:${x}px;top:${y}px`;
+  card.appendChild(ripple);
+  ripple.addEventListener('animationend', () => ripple.remove());
 }
 
 function showCard(index, position, animate = false) {
@@ -636,30 +802,34 @@ function showCard(index, position, animate = false) {
 
   gname.textContent = rec.gameName;
   kname.textContent = rec.catName;
-  timEl.textContent = displayTime(rec);
+
+  // Для карточки 1 — показываем время сразу, для карточки 2 — скрываем
+  if (position === 1) {
+    timEl.className = 'card-time known';
+    timEl.textContent = displayTime(rec);
+  } else {
+    timEl.className = 'card-time hidden';
+    timEl.textContent = '???';
+  }
 
   // Анимация появления карточки
   if (animate) {
     card.classList.remove('fade-in');
-    void card.offsetWidth; // reflow
+    void card.offsetWidth;
     card.classList.add('fade-in');
   }
 
   // Сброс изображения
-  img.style.display = 'none';
-  ph.style.display  = 'flex';
+  img.classList.remove('loaded');
   img.src = '';
-
-  const targetSrc = rec.image;
-  const imgEl     = img;
-  const phEl      = ph;
+  ph.style.display = 'flex';
 
   const tryLoad = (url) => new Promise((resolve) => {
     const i = new Image();
     i.onload  = () => {
-      imgEl.src = url;
-      imgEl.style.display = 'block';
-      phEl.style.display  = 'none';
+      img.src = url;
+      img.classList.add('loaded');
+      ph.style.display = 'none';
       resolve(true);
     };
     i.onerror = () => resolve(false);
@@ -667,25 +837,36 @@ function showCard(index, position, animate = false) {
   });
 
   (async () => {
-    if (await tryLoad(targetSrc)) return;
-    await tryLoad(CORS_PROXY + encodeURIComponent(targetSrc));
+    if (await tryLoad(rec.image)) return;
+    await tryLoad(CORS_PROXY + encodeURIComponent(rec.image));
   })();
 }
 
-function animateScore() {
+function animateScore(correct) {
   const el = document.getElementById('score');
+  // Обновляем цвет счёта
+  const val = parseInt(el.textContent, 10);
+  el.classList.remove('positive', 'negative');
+  if (val > 0) el.classList.add('positive');
+  else if (val < 0) el.classList.add('negative');
+  // Анимация
   el.classList.remove('score-pop');
   void el.offsetWidth;
   el.classList.add('score-pop');
   el.addEventListener('animationend', () => el.classList.remove('score-pop'), { once: true });
 }
 
-function cardClick(choice) {
+function cardClick(choice, event) {
   if (waitSwap || !gameStarted) return;
 
-  // Открываем скрытое время карточки 2
+  // Ripple
+  if (event) spawnRipple(document.getElementById(`card${choice}`), event);
+
+  // Открываем скрытое время карточки 2 с анимацией
   const t2El = document.getElementById('time2');
+  t2El.className = 'card-time known reveal';
   t2El.textContent = displayTime(pool[idx2]);
+  t2El.addEventListener('animationend', () => t2El.classList.remove('reveal'), { once: true });
 
   const sec1 = pool[idx1].wrTimeSec;
   const sec2 = pool[idx2].wrTimeSec;
@@ -695,26 +876,19 @@ function cardClick(choice) {
   card1.classList.remove('correct', 'wrong', 'draw');
   card2.classList.remove('correct', 'wrong', 'draw');
 
-  let isCorrect = false;
-
   if (Math.abs(sec1 - sec2) < 0.001) {
-    // Ничья — оба жёлтые, счёт не меняется
+    // Ничья
     card1.classList.add('draw');
     card2.classList.add('draw');
   } else {
-    isCorrect = choice === 1 ? sec1 < sec2 : sec2 < sec1;
-    if (isCorrect) {
-      document.getElementById(`card${choice}`).classList.add('correct');
-      score++;
-    } else {
-      document.getElementById(`card${choice}`).classList.add('wrong');
-      score--;
-    }
+    const isCorrect = choice === 1 ? sec1 < sec2 : sec2 < sec1;
+    document.getElementById(`card${choice}`).classList.add(isCorrect ? 'correct' : 'wrong');
+    if (isCorrect) score++; else score--;
     document.getElementById('score').textContent = score;
-    animateScore();
+    animateScore(isCorrect);
   }
 
-  // Сдвиг: card2 становится card1
+  // Сдвиг: card2 → card1
   idx1 = idx2;
   idx2 = nextIndex(idx1);
 
@@ -724,11 +898,8 @@ function cardClick(choice) {
   swapTimer = setTimeout(() => {
     card1.classList.remove('correct', 'wrong', 'draw');
     card2.classList.remove('correct', 'wrong', 'draw');
-
     showCard(idx1, 1, false);
-    showCard(idx2, 2, true);   // анимируем только новую карточку
-    document.getElementById('time2').textContent = '???';
-
+    showCard(idx2, 2, true);
     waitSwap = false;
     setCardsEnabled(true);
   }, SWAP_DELAY);
