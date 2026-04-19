@@ -61,53 +61,48 @@
     #start-screen {
       align-items: center;
       justify-content: center;
-      gap: 40px;
-      padding: 24px;
+      gap: 32px;
+      padding: 32px 24px;
       background: var(--bg);
     }
 
-    .start-logo {
-      text-align: center;
-      line-height: 1;
-    }
+    .start-logo { text-align: center; }
     .start-logo .title {
-      font-size: clamp(26px, 5vw, 52px);
+      font-size: clamp(24px, 4.5vw, 48px);
       font-weight: 900;
-      letter-spacing: 3px;
+      letter-spacing: 2px;
       background: linear-gradient(135deg, var(--accent), var(--accent2), #ffb347);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
     .start-logo .subtitle {
-      font-size: clamp(11px, 1.5vw, 14px);
+      font-size: clamp(10px, 1.3vw, 13px);
       color: var(--text-dim);
       letter-spacing: 4px;
       text-transform: uppercase;
-      margin-top: 6px;
+      margin-top: 8px;
     }
 
+    /* Плитки режимов — компактный ряд, не растягиваются */
     .modes-grid {
       display: flex;
-      gap: 20px;
+      gap: 16px;
       flex-wrap: wrap;
       justify-content: center;
-      width: 100%;
-      max-width: 860px;
     }
 
     .mode-card {
-      flex: 1;
-      min-width: 220px;
-      max-width: 260px;
+      width: 200px;
+      flex: 0 0 auto;
       background: var(--bg2);
-      border: 2px solid transparent;
+      border: 1px solid rgba(255,255,255,0.06);
       border-radius: var(--radius);
-      padding: 28px 20px 24px;
+      padding: 24px 18px 20px;
       cursor: pointer;
       text-align: center;
       transition: transform 0.2s cubic-bezier(.34,1.56,.64,1),
-                  box-shadow 0.2s, border-color 0.2s, background 0.2s;
+                  box-shadow 0.2s, border-color 0.25s, background 0.2s;
       position: relative;
       overflow: hidden;
     }
@@ -119,31 +114,32 @@
       opacity: 0;
       transition: opacity 0.3s;
     }
-    .mode-card:hover { transform: translateY(-6px); }
+    .mode-card:hover { transform: translateY(-5px); }
     .mode-card:hover::before { opacity: 1; }
 
-    .mode-card.endless  { --glow: linear-gradient(135deg,rgba(250,62,32,.12),transparent); }
-    .mode-card.normal   { --glow: linear-gradient(135deg,rgba(0,230,118,.12),transparent); }
-    .mode-card.hardcore { --glow: linear-gradient(135deg,rgba(255,23,68,.12),transparent); }
+    .mode-card.endless  { --glow: linear-gradient(160deg,rgba(250,62,32,.1),transparent 60%); }
+    .mode-card.normal   { --glow: linear-gradient(160deg,rgba(0,230,118,.1),transparent 60%); }
+    .mode-card.hardcore { --glow: linear-gradient(160deg,rgba(255,23,68,.1),transparent 60%); }
 
-    .mode-card:hover.endless  { border-color: var(--accent); box-shadow: 0 8px 32px rgba(250,62,32,.3); }
-    .mode-card:hover.normal   { border-color: var(--green);  box-shadow: 0 8px 32px rgba(0,230,118,.3); }
-    .mode-card:hover.hardcore { border-color: var(--red);    box-shadow: 0 8px 32px rgba(255,23,68,.3); }
+    .mode-card:hover.endless  { border-color: rgba(250,62,32,.5); box-shadow: 0 6px 28px rgba(250,62,32,.2); }
+    .mode-card:hover.normal   { border-color: rgba(0,230,118,.5); box-shadow: 0 6px 28px rgba(0,230,118,.2); }
+    .mode-card:hover.hardcore { border-color: rgba(255,23,68,.5);  box-shadow: 0 6px 28px rgba(255,23,68,.2); }
 
-    .mode-icon { font-size: 48px; margin-bottom: 14px; display: block; line-height: 1; }
+    .mode-icon { font-size: 36px; margin-bottom: 12px; display: block; line-height: 1; }
     .mode-name {
-      font-size: clamp(15px, 2vw, 18px);
+      font-size: clamp(13px, 1.6vw, 15px);
       font-weight: 800;
       margin-bottom: 8px;
+      letter-spacing: 0.3px;
     }
     .mode-card.endless  .mode-name { color: var(--accent2); }
     .mode-card.normal   .mode-name { color: var(--green); }
     .mode-card.hardcore .mode-name { color: var(--red); }
 
     .mode-desc {
-      font-size: clamp(11px, 1.3vw, 13px);
+      font-size: clamp(10px, 1.1vw, 12px);
       color: var(--text-dim);
-      line-height: 1.5;
+      line-height: 1.55;
     }
 
     /* ════════════════════════════════
@@ -501,8 +497,8 @@
       .card { max-width: 100%; }
       .vs-col { flex-direction: row; gap: 20px; justify-content: center; }
       .card-img-wrap { min-height: 140px; max-height: 200px; }
-      .modes-grid { flex-direction: column; align-items: center; }
-      .mode-card { max-width: 100%; width: 100%; min-width: 0; }
+      .modes-grid { flex-direction: column; align-items: stretch; width: 100%; max-width: 340px; margin: 0 auto; }
+      .mode-card { width: 100%; }
     }
   </style>
 </head>
@@ -636,13 +632,15 @@
 const API_BASE   = 'https://www.speedrun.com/api/v1';
 const CORS_PROXY = 'https://corsproxy.io/?url=';
 const SWAP_DELAY = 2000;
-const MAX_POOL   = 20;   // максимум игр в пуле
+const MAX_POOL   = 20;   // сколько держим в активном пуле
 
 /* ═══════════════════════════════════════════════════════════════
    STATE
 ═══════════════════════════════════════════════════════════════ */
-let pool        = [];
-let totalIds    = 0;
+let pool        = [];   // активный пул (текущие 20)
+let allIds      = [];   // все ID из файла, ещё не загруженные
+let loadedIds   = new Set(); // уже загруженные ID
+let totalIds    = 0;    // сколько всего ID в файле
 let gameStarted = false;
 let waitSwap    = false;
 let score       = 0;
@@ -652,6 +650,7 @@ let idx1 = -1, idx2 = -1;
 let queue = [], queuePos = 0;
 let swapTimer   = null;
 let _apiMethod  = 'direct';
+let _refilling  = false; // флаг фонового пополнения
 
 /* ═══════════════════════════════════════════════════════════════
    SCREENS
@@ -704,10 +703,11 @@ function setProgress(pct) {
 function updatePoolCounter() {
   const el = document.getElementById('pool-counter');
   if (!el) return;
-  if (pool.length >= totalIds && totalIds > 0)
-    el.textContent = '✓ Загружено ' + pool.length + ' игр';
+  const reserve = allIds.length;
+  if (reserve > 0)
+    el.textContent = '⏳ В пуле: ' + pool.length + '  |  В запасе: ' + reserve;
   else
-    el.textContent = '⏳ ' + pool.length + ' / ' + (totalIds || '?');
+    el.textContent = '✓ В пуле: ' + pool.length + ' игр';
 }
 
 function showToast(msg, dur = 3000) {
@@ -817,29 +817,62 @@ async function loadPreCreated() {
   } catch (_) { return; }
   if (ids.length === 0) return;
 
-  // Берём случайные MAX_POOL штук
   shuffle(ids);
-  ids = ids.slice(0, MAX_POOL);
   totalIds = ids.length;
+  allIds   = [...ids]; // полный перемешанный запас
   updatePoolCounter();
 
-  for (const id of ids) {
+  // Загружаем первые MAX_POOL штук
+  const first = allIds.splice(0, MAX_POOL);
+  for (const id of first) {
     const rec = await fetchOneBySlug(id);
     if (rec) addToPool(rec);
     await sleep(300);
   }
 }
 
+// Пополняем пул из запаса, заменяя сыгравшие игры
+async function refillPool() {
+  if (_refilling) return;
+  _refilling = true;
+  while (pool.length < MAX_POOL && allIds.length > 0) {
+    const id = allIds.shift();
+    if (loadedIds.has(id)) continue;
+    const rec = await fetchOneBySlug(id);
+    if (rec) addToPool(rec);
+    await sleep(300);
+  }
+  _refilling = false;
+}
+
 /* ═══════════════════════════════════════════════════════════════
    POOL
 ═══════════════════════════════════════════════════════════════ */
 function addToPool(rec) {
+  loadedIds.add(rec.id);
   pool.push(rec);
-  setProgress(totalIds > 0 ? Math.min(100, pool.length / totalIds * 100) : 0);
+  // Прогресс считаем по первым MAX_POOL
+  const loaded = Math.min(loadedIds.size, MAX_POOL);
+  setProgress(Math.min(100, loaded / MAX_POOL * 100));
   const sub = document.getElementById('loading-sub');
-  if (sub) sub.textContent = 'Загружено: ' + pool.length + ' / ' + (totalIds || '?');
+  if (sub) sub.textContent = 'Загружено: ' + loaded + ' / ' + MAX_POOL;
   updatePoolCounter();
   if (gameStarted) rebuildQueue();
+  else tryStartGame();
+}
+
+// Удаляем сыгравшую игру из пула и запускаем пополнение
+function retireCard(index) {
+  pool.splice(index, 1);
+  // После splice индексы idx1/idx2 уже указывают на новые позиции —
+  // корректируем только те, что сместились из-за удаления
+  if (idx1 > index) idx1--;
+  if (idx2 > index) idx2--;
+  // idx1/idx2 не могут быть равны index — retire всегда вызывается
+  // со старым retireIdx который уже не является ни idx1 ни idx2
+  rebuildQueue();
+  if (pool.length < MAX_POOL && allIds.length > 0) refillPool();
+  updatePoolCounter();
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1068,8 +1101,11 @@ function cardClick(choice, event) {
     }
   }
 
+  // card2 становится card1, старый card1 уходит в отставку
+  // Запоминаем retireIdx ДО обновления idx1/idx2
+  const retireIdx = idx1;
   idx1 = idx2;
-  idx2 = nextIndex(idx1);
+  // idx2 подберём ПОСЛЕ retire (пул может уменьшиться)
 
   waitSwap = true;
   setCardsEnabled(false);
@@ -1077,6 +1113,10 @@ function cardClick(choice, event) {
   swapTimer = setTimeout(() => {
     card1.classList.remove('correct','wrong','draw');
     card2.classList.remove('correct','wrong','draw');
+    // Убираем сыгравшую карточку; idx1 уже скорректируется внутри retireCard
+    retireCard(retireIdx);
+    // Берём следующую карточку уже из обновлённого пула
+    idx2 = nextIndex(idx1);
     showCard(idx1, 1, false);
     showCard(idx2, 2, true);
     waitSwap = false;
