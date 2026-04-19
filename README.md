@@ -1,4 +1,4 @@
-# 🎮 MEGA QIZ — Speedrun Edition
+# 🎮 SPEEDRUN QUIZ BATTLE
 
 **Угадай, чей мировой рекорд быстрее!**
 
