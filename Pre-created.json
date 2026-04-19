@@ -1,74 +1,124 @@
-﻿{
+{
     "games": [
         {
-            "id": "the_sims_life_stories",
-            "GameName": "The Sims Life Stories",
-            "CatName": "Riley Harlow",
-            "WRTime": "1:06:16",
-            "Image": "https:\/\/www.speedrun.com\/static\/game\/m1zjm506\/cover?v=75fbc0b"
+            "id": "chessformer"
         },
         {
-            "id": "shining_soul_ii",
-            "GameName": "Shining Soul II",
-            "CatName": "Any%",
-            "WRTime": "55:12",
-            "Image": "https:\/\/www.speedrun.com\/static\/game\/pdvqj96w\/cover?v=29c01a6"
+            "id": "DOODLE_JOURNEY"
         },
         {
-            "id": "dragon_unit",
-            "GameName": "Dragon Unit",
-            "CatName": "Any%",
-            "WRTime": "2:35",
-            "Image": "https:\/\/www.speedrun.com\/static\/game\/j1n8q391\/cover?v=b0146e9"
+            "id": "7554_glorious_memories_revived"
         },
         {
-            "id": "Sisters_Royale",
-            "GameName": "Sisters Royale",
-            "CatName": "Easy",
-            "WRTime": "12:31",
-            "Image": "https:\/\/www.speedrun.com\/static\/game\/369wp5ld\/cover?v=400b833"
+            "id": "Planet_Diver"
         },
         {
-            "id": "dyna_boy",
-            "GameName": "Dyna Boy",
-            "CatName": "Any%",
-            "WRTime": "10:59",
-            "Image": "https:\/\/www.speedrun.com\/static\/game\/lde3mmj6\/cover?v=e385d10"
+            "id": "the_smurfs"
         },
         {
-            "id": "detective_pikachu_returns",
-            "GameName": "Detective Pikachu Returns",
-            "CatName": "Any%",
-            "WRTime": "2:19:37",
-            "Image": "https:\/\/www.speedrun.com\/static\/game\/76r44e51\/cover?v=b3b71eb"
+            "id": "Mr__Dragons_Short_Quest"
         },
         {
-            "id": "blokdropu",
-            "GameName": "BLOK DROP U",
-            "CatName": "All Levels",
-            "WRTime": "16:23",
-            "Image": "https:\/\/www.speedrun.com\/static\/game\/4d7943g1\/cover?v=f281a21"
+            "id": "pogloot_ce"
         },
         {
-            "id": "Owl_Observatory",
-            "GameName": "Owl Observatory",
-            "CatName": "Αny% (Demo)",
-            "WRTime": "1:15.350",
-            "Image": "https:\/\/www.speedrun.com\/static\/game\/369w9v3d\/cover?v=a6e032d"
+            "id": "t13d"
         },
         {
-            "id": "evn",
-            "GameName": "Escape Velocity Nova",
-            "CatName": "Any % (Vell-os)",
-            "WRTime": "14:22",
-            "Image": "https:\/\/www.speedrun.com\/static\/game\/9dowzmk1\/cover?v=910d616"
+            "id": "slay_yourself"
         },
         {
-            "id": "jazzpunk",
-            "GameName": "Jazzpunk",
-            "CatName": "Any%",
-            "WRTime": "13:28.320",
-            "Image": "https:\/\/www.speedrun.com\/static\/game\/268wlo6p\/cover?v=e44933e"
+            "id": "whitetail"
+        },
+        {
+            "id": "mhxx"
+        },
+        {
+            "id": "jeopardy_snes"
+        },
+        {
+            "id": "nd_ran"
+        },
+        {
+            "id": "legend_of_zelda_specters_of_the_past"
+        },
+        {
+            "id": "hoshi_saga_ringoen"
+        },
+        {
+            "id": "roblox_rust_machine"
+        },
+        {
+            "id": "castle_frankenstein_on_templeos"
+        },
+        {
+            "id": "Astronimo"
+        },
+        {
+            "id": "resident_evil_hd_remaster_console"
+        },
+        {
+            "id": "carmen_sandiego_math_detective"
+        },
+        {
+            "id": "terra_incognita"
+        },
+        {
+            "id": "tru"
+        },
+        {
+            "id": "asghan"
+        },
+        {
+            "id": "senko_no_ronde_new_version"
+        },
+        {
+            "id": "bobobobo_bobobo_hajike_matsuri"
+        },
+        {
+            "id": "knuckle_heads"
+        },
+        {
+            "id": "disneys_magic_artist"
+        },
+        {
+            "id": "sigi"
+        },
+        {
+            "id": "spot_goes_to_hollywood"
+        },
+        {
+            "id": "ICSS"
+        },
+        {
+            "id": "zctt"
+        },
+        {
+            "id": "ghwt"
+        },
+        {
+            "id": "Stickman_Dash"
+        },
+        {
+            "id": "in_your_face"
+        },
+        {
+            "id": "super_street_fighter_2_turbo"
+        },
+        {
+            "id": "sokpopdeer"
+        },
+        {
+            "id": "parkour_thief"
+        },
+        {
+            "id": "jellycar"
+        },
+        {
+            "id": "HNPR"
+        },
+        {
+            "id": "bombhopper"
         }
     ]
 }
