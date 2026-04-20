@@ -336,6 +336,7 @@
     .card-img-wrap {
       flex: 1;
       min-height: 0;
+      max-height: 340px;  /* не растягиваем бесконечно на больших экранах */
       border-radius: 10px;
       overflow: hidden;
       background: #111622;
@@ -776,6 +777,8 @@ async function fetchOneBySlug(slug) {
                 || (data.assets?.['cover-medium']?.uri)
                 || buildCoverURL(apiId);
 
+  const BLANK_COVER = 'https://www.speedrun.com/images/blankcover.png';
+
   const [catResult] = await Promise.all([
     (async () => {
       const jc = await apiGet(`${API_BASE}/games/${apiId}/categories?miscellaneous=no`);
@@ -786,12 +789,29 @@ async function fetchOneBySlug(slug) {
       return null;
     })(),
     (async () => {
+      // Пропускаем blank cover
+      if (coverURL === BLANK_COVER) { coverURL = buildCoverURL(apiId); }
+      // Проверяем через Image (без fetch — обходит CORS/403)
       const ok = await imageExists(coverURL);
-      if (!ok) { const fb = buildCoverURL(apiId); if (fb !== coverURL) coverURL = fb; }
+      if (!ok) {
+        const fb = buildCoverURL(apiId);
+        if (fb !== coverURL) {
+          const ok2 = await imageExists(fb);
+          coverURL = ok2 ? fb : '';
+        } else {
+          coverURL = '';
+        }
+      }
+      // Если coverURL пуст — значит обложки нет совсем, пропустим игру
     })()
   ]);
 
   if (!catResult) { console.warn('[skip] no cats:', slug); return null; }
+  // blank cover или недоступная обложка → пропуск
+  if (coverURL === BLANK_COVER || coverURL === '') {
+    console.warn('[skip] no valid cover:', slug);
+    return null;
+  }
 
   const jl = await apiGet(
     `${API_BASE}/leaderboards/${apiId}/category/${catResult.id}?top=1`
@@ -929,6 +949,13 @@ function startGame(mode) {
 
   document.getElementById('score').textContent = '0';
   document.getElementById('score').className   = '';
+
+  // Сбрасываем цвета карточек (баг: красная карточка остаётся после рестарта)
+  ['card1','card2'].forEach(id => {
+    const c = document.getElementById(id);
+    c.classList.remove('correct','wrong','draw','disabled');
+  });
+
   renderLives();
   showScreen('game-screen');
   tryStartGame();
