@@ -215,7 +215,7 @@
     .arena {
       flex: 1;
       display: flex;
-      align-items: stretch;
+      align-items: center;  /* карточки по центру, не растягиваются */
       justify-content: center;
       gap: clamp(8px, 2vw, 32px);
       padding: clamp(8px, 1.5vw, 16px) clamp(10px, 2vw, 32px);
@@ -246,6 +246,7 @@
     .card {
       flex: 1;
       max-width: 380px;
+      max-height: 560px;   /* ограничиваем высоту на больших экранах */
       min-width: 0;
       background: var(--card-bg);
       border-radius: var(--radius);
@@ -495,9 +496,9 @@
         padding: 6px 10px 10px;
         gap: 8px;
       }
-      .card { max-width: 100%; }
+      .card { max-width: 100%; max-height: none; }  /* на мобиле высота свободная */
       .vs-col { flex-direction: row; gap: 20px; justify-content: center; }
-      .card-img-wrap { min-height: 140px; max-height: 200px; }
+      .card-img-wrap { min-height: 140px; max-height: 180px; }
       .modes-grid { flex-direction: column; align-items: stretch; width: 100%; max-width: 340px; margin: 0 auto; }
       .mode-card { width: 100%; }
     }
